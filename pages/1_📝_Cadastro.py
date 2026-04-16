@@ -1,6 +1,5 @@
 import streamlit as st
-from streamlit_gsheets import GSheetsConnection
-import pandas as pd
+import requests
 from datetime import datetime
 
 # 1. Proteção de Acesso
@@ -10,17 +9,8 @@ if "logado" not in st.session_state or not st.session_state.logado:
 
 st.set_page_config(page_title="Cadastro - ISOSED", page_icon="📝")
 
-# --- CONFIGURAÇÃO DA CONEXÃO ---
-# Certifique-se de que o link abaixo está correto e "limpo"
-URL_PLANILHA = "https://docs.google.com/spreadsheets/d/1jtaWUZGAlDcCNctxIOyFaTUJ-Bt73L1WiVXxsBHqmas/edit?gid=0#gid=0"
-
-try:
-    conn = st.connection("gsheets", type=GSheetsConnection)
-except Exception as e:
-    st.error(f"Erro de conexão: {e}")
-    st.stop()
-
 st.title("📝 Cadastro de Novo Membro")
+st.write(f"Operador atual: **{st.session_state.perfil}**")
 
 # 2. Formulário de Cadastro
 with st.form("formulario_membro", clear_on_submit=True):
@@ -49,43 +39,37 @@ with st.form("formulario_membro", clear_on_submit=True):
 
     submit = st.form_submit_button("Finalizar e Salvar Cadastro")
 
+    # --- LÓGICA DE ENVIO VIA APPS SCRIPT ---
     if submit:
         if not nome or not consentimento:
             st.error("❌ Erro: Nome e Consentimento são obrigatórios.")
-       import streamlit as st
-import requests # Adicione esta biblioteca no topo e no seu requirements.txt
-from datetime import datetime
-
-# ... (Mantenha as proteções de acesso e o formulário como estão) ...
-
-if submit:
-    if not nome or not consentimento:
-        st.error("❌ Nome e Consentimento são obrigatórios.")
-    else:
-        # URL que você copiou do Apps Script
-        WEBAPP_URL = "https://script.google.com/macros/s/AKfycbzb2zuulVvUTyHEQ8kyBiCaTqj7zhvMZKXy4vpJQifHgqiGZOsNFkH0X80J-aTfG5_F/exec"
-        
-        dados = {
-            "data_cadastro": datetime.now().strftime("%d/%m/%Y %H:%M"),
-            "nome": nome,
-            "whatsapp": whatsapp,
-            "data_nascimento": nascimento.strftime("%d/%m/%Y"),
-            "cargo": cargo,
-            "ministerio": ", ".join(ministerios),
-            "status": status,
-            "consentimento_lgpd": "Sim",
-            "cadastrado_por": st.session_state.perfil
-        }
-        
-        try:
-            response = requests.post(WEBAPP_URL, json=dados)
-            if response.text == "Sucesso":
-                st.success(f"✅ Sucesso! {nome} foi registrado.")
-                st.balloons()
-            else:
-                st.error(f"Erro no servidor: {response.text}")
-        except Exception as e:
-            st.error(f"Erro ao enviar dados: {e}")
+        else:
+            # substitua o link abaixo pelo link que termina em /exec
+            WEBAPP_URL = "https://script.google.com/macros/s/AKfycbweynuNo3p4lv7eC3xT7iW0QJwP7N9SvrE-XBECwq7ACEO6BiMyGSAeE2RBl7izXELn/exec"
+            
+            dados = {
+                "data_cadastro": datetime.now().strftime("%d/%m/%Y %H:%M"),
+                "nome": str(nome).strip(),
+                "whatsapp": str(whatsapp).strip(),
+                "data_nascimento": nascimento.strftime("%d/%m/%Y"),
+                "cargo": str(cargo),
+                "ministerio": ", ".join(ministerios),
+                "status": str(status),
+                "consentimento_lgpd": "Sim",
+                "cadastrado_por": str(st.session_state.perfil)
+            }
+            
+            try:
+                # O comando 'timeout=10' evita que o app fique travado se o Google demorar
+                response = requests.post(WEBAPP_URL, json=dados, timeout=10)
+                
+                if response.text == "Sucesso":
+                    st.success(f"✅ Sucesso! {nome} foi registrado com sucesso.")
+                    st.balloons()
+                else:
+                    st.error(f"O Google Sheets respondeu com erro: {response.text}")
+            except Exception as e:
+                st.error(f"Erro ao conectar com o script da planilha: {e}")
 
 st.markdown("---")
-st.caption("ISOSED Cosmópolis - Gestão Interna")
+st.caption("ISOSED Cosmópolis - Sistema de Gestão Interna")
