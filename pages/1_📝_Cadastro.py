@@ -44,7 +44,7 @@ st.divider()
 
 # --- CONFIGURAÇÃO DA CONEXÃO ---
 # Coloque aqui a URL que você gerou no "Implantar" do Google Apps Script
-WEBAPP_URL = "SUA_URL_DO_APPS_SCRIPT_AQUI"
+WEBAPP_URL = https://script.google.com/macros/s/AKfycbweynuNo3p4lv7eC3xT7iW0QJwP7N9SvrE-XBECwq7ACEO6BiMyGSAeE2RBl7izXELn/exec"
 
 # 2. Formulário de Cadastro
 with st.form("form_cadastro", clear_on_submit=True):
