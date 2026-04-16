@@ -12,7 +12,7 @@ st.set_page_config(page_title="Cadastro - ISOSED", page_icon="📝")
 
 # --- CONFIGURAÇÃO DA CONEXÃO ---
 # Certifique-se de que o link abaixo está correto e "limpo"
-URL_PLANILHA = "SUA_URL_DA_PLANILHA_AQUI"
+URL_PLANILHA = "https://docs.google.com/spreadsheets/d/1jtaWUZGAlDcCNctxIOyFaTUJ-Bt73L1WiVXxsBHqmas/edit?gid=0#gid=0"
 
 try:
     conn = st.connection("gsheets", type=GSheetsConnection)
