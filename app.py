@@ -1,6 +1,6 @@
 import streamlit as st
 
-# 1. Configuração inicial da página (Deve ser a primeira linha de código)
+# 1. Configuração inicial da página
 st.set_page_config(
     page_title="ISOSED Cosmópolis - Gestão",
     page_icon="⛪",
@@ -8,19 +8,20 @@ st.set_page_config(
     initial_sidebar_state="expanded"
 )
 
-# 2. Banco de Dados de Usuários e Perfis
-# Recomenda-se futuramente mover as senhas para o menu 'Secrets' do Streamlit
+# 2. Banco de Dados de Usuários
 USUARIOS = {
     "pastor": {"senha": "123", "perfil": "Pastores"},
     "secretaria": {"senha": "456", "perfil": "Secretária"},
     "comunicacao": {"senha": "789", "perfil": "Comunicação"}
 }
 
-# 3. Inicialização do Estado de Login
+# 3. Inicialização do Estado de Login (CORREÇÃO AQUI)
 if "logado" not in st.session_state:
     st.session_state.logado = False
+if "perfil" not in st.session_state:
     st.session_state.perfil = None
-    st.session_state.usuario_nome = None
+if "usuario_nome" not in st.session_state:
+    st.session_state.usuario_nome = ""
 
 # 4. Funções de Autenticação
 def realizar_login(usuario, senha):
@@ -34,7 +35,7 @@ def realizar_login(usuario, senha):
 def realizar_logout():
     st.session_state.logado = False
     st.session_state.perfil = None
-    st.session_state.usuario_nome = None
+    st.session_state.usuario_nome = ""
     st.rerun()
 
 # 5. Interface de Usuário
@@ -45,13 +46,7 @@ if not st.session_state.logado:
     with col1:
         st.title("⛪ Gestão de Membros - ISOSED")
         st.subheader("Portal Administrativo")
-        st.markdown("""
-        Bem-vindo ao sistema de gestão da **ISOSED Cosmópolis**. 
-        Este ambiente é seguro e monitorado em conformidade com a **LGPD** e a **Lei nº 15.211/2025**.
-        
-        Utilize as suas credenciais para aceder às ferramentas de acordo com o seu perfil.
-        """)
-        st.image("https://img.icons8.com/fluency/200/church.png") # Ícone ilustrativo
+        st.markdown("Bem-vindo ao sistema da ISOSED Cosmópolis.")
 
     with col2:
         with st.container(border=True):
@@ -68,38 +63,16 @@ if not st.session_state.logado:
 
 else:
     # --- INTERFACE APÓS LOGIN ---
-    # Barra Lateral
     st.sidebar.title("Menu Principal")
     st.sidebar.success(f"Perfil: {st.session_state.perfil}")
-    st.sidebar.markdown(f"**Utilizador:** {st.session_state.usuario_nome}")
+    
+    # Verificação extra para evitar o AttributeError
+    nome_exibicao = st.session_state.get("usuario_nome", "Usuário")
+    st.sidebar.markdown(f"**Utilizador:** {nome_exibicao}")
     
     if st.sidebar.button("Sair / Logoff"):
         realizar_logout()
 
-    # Painel Principal
     st.title(f"Bem-vindo, {st.session_state.perfil}")
     st.write("---")
-    
-    # Mensagens de orientação baseadas no perfil
-    if st.session_state.perfil == "Pastores":
-        st.markdown("### 📊 Visão Estratégica")
-        st.write("Tem acesso completo aos indicadores de crescimento e gestão de membros.")
-    
-    elif st.session_state.perfil == "Secretária":
-        st.markdown("### 📝 Gestão de Registos")
-        st.write("Foque na manutenção e atualização da base de dados da congregação.")
-        
-    elif st.session_state.perfil == "Comunicação":
-        st.markdown("### 📢 Portal de Cadastro")
-        st.warning("O seu perfil permite apenas o **Cadastro de Novos Membros**.")
-
-    st.info("👈 Selecione a opção **'Cadastro'** ou **'Dashboard'** no menu lateral para continuar.")
-
-    # Rodapé de Conformidade Legal
-    st.divider()
-    st.markdown("""
-    <div style='text-align: center; font-size: 0.8em; color: gray;'>
-        <b>ISOSED Cosmópolis</b><br>
-        Sistema em conformidade com a Lei nº 13.709/2018 (LGPD) e Lei nº 15.211/2025.
-    </div>
-    """, unsafe_allow_html=True)
+    st.info("👈 Selecione a opção no menu lateral para continuar.")
