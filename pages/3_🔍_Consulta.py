@@ -48,7 +48,7 @@ st.divider()
 
 # --- CONFIGURAÇÃO DA PLANILHA ---
 # COLOQUE O SEU LINK ABAIXO
-URL_PLANILHA = "SUA_URL_DA_PLANILHA_AQUI"
+URL_PLANILHA = "https://docs.google.com/spreadsheets/d/1jtaWUZGAlDcCNctxIOyFaTUJ-Bt73L1WiVXxsBHqmas/edit?gid=0#gid=0"
 
 # Lógica de conversão segura
 def obter_link_csv(url):
