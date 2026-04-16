@@ -155,3 +155,4 @@ else:
 
 st.markdown("---")
 st.caption("ISOSED Cosmópolis - Sistema em conformidade com a Lei 13.709/2018 (LGPD)")
+st.caption("Desenvolvido por Comunicando igrejas")
