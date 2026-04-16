@@ -97,4 +97,4 @@ else:
     st.warning("⚠️ A base de dados está vazia ou o link da planilha está incorreto.")
 
 st.caption("ISOSED Cosmópolis - Consulta Segura (LGPD)"
-st.caption("Desenvolvido por Comunicando Igrejas")
+st.caption("Desenvolvido por Comunicando Igrejas"))
