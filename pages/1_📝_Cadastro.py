@@ -11,7 +11,7 @@ if "logado" not in st.session_state or not st.session_state.logado:
 st.set_page_config(page_title="Cadastro - ISOSED", page_icon="📝")
 
 # --- CONFIGURAÇÃO DA CONEXÃO ---
-# Substitua pelo seu link real se o erro de 'Spreadsheet specified' voltar
+# Certifique-se de que o link abaixo está correto e "limpo"
 URL_PLANILHA = "SUA_URL_DA_PLANILHA_AQUI"
 
 try:
@@ -21,7 +21,6 @@ except Exception as e:
     st.stop()
 
 st.title("📝 Cadastro de Novo Membro")
-st.write(f"Operador atual: **{st.session_state.perfil}**")
 
 # 2. Formulário de Cadastro
 with st.form("formulario_membro", clear_on_submit=True):
@@ -45,43 +44,43 @@ with st.form("formulario_membro", clear_on_submit=True):
 
     st.divider()
     
-    # Seção LGPD
     st.warning("⚖️ Conformidade LGPD & Lei 15.211/2025")
-    consentimento = st.checkbox("O membro autorizou o tratamento de seus dados para fins institucionais da ISOSED.")
+    consentimento = st.checkbox("O membro autorizou o tratamento de dados.")
 
     submit = st.form_submit_button("Finalizar e Salvar Cadastro")
 
-    # --- INÍCIO DA LÓGICA DE SALVAMENTO ---
     if submit:
         if not nome or not consentimento:
-            st.error("❌ Erro: O Nome e o Consentimento são obrigatórios.")
+            st.error("❌ Erro: Nome e Consentimento são obrigatórios.")
         else:
             try:
-                # Criando o DataFrame com dados limpos e em formato texto
-                novo_membro = pd.DataFrame([{
-                    "data_cadastro": str(datetime.now().strftime("%d/%m/%Y %H:%M")),
+                # Criando a nova linha
+                nova_linha = pd.DataFrame([{
+                    "data_cadastro": datetime.now().strftime("%d/%m/%Y %H:%M"),
                     "nome": str(nome).strip(),
                     "whatsapp": str(whatsapp).strip(),
-                    "data_nascimento": str(nascimento.strftime("%d/%m/%Y")),
+                    "data_nascimento": nascimento.strftime("%d/%m/%Y"),
                     "cargo": str(cargo),
-                    "ministerio": str(", ".join(ministerios)),
+                    "ministerio": ", ".join(ministerios),
                     "status": str(status),
                     "consentimento_lgpd": "Sim",
                     "cadastrado_por": str(st.session_state.perfil)
                 }])
 
-                # Gravação usando o método append para evitar Erro 400
-                conn.update(
-                    spreadsheet=URL_PLANILHA,
-                    worksheet="Membros",
-                    data=novo_membro,
-                    append=True
-                )
+                # MÉTODO CORRETO: Ler -> Concatenar -> Atualizar
+                # Lendo dados atuais
+                dados_existentes = conn.read(spreadsheet=URL_PLANILHA, worksheet="Membros")
                 
-                st.success(f"✅ Sucesso! {nome} foi registrado na base da ISOSED.")
+                # Juntando os dados antigos com o novo membro
+                dados_atualizados = pd.concat([dados_existentes, nova_linha], ignore_index=True)
+                
+                # Enviando tudo de volta para a planilha
+                conn.update(spreadsheet=URL_PLANILHA, worksheet="Membros", data=dados_atualizados)
+                
+                st.success(f"✅ Sucesso! {nome} foi registrado.")
                 st.balloons()
             except Exception as e:
                 st.error(f"Erro ao salvar: {e}")
 
 st.markdown("---")
-st.caption("ISOSED Cosmópolis - Sistema de Gestão Interna")
+st.caption("ISOSED Cosmópolis - Gestão Interna")
