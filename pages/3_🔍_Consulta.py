@@ -15,6 +15,11 @@ st.markdown("""
         color: white;
         border: 1px solid #2e7bcf;
         font-weight: bold;
+        transition: 0.3s;
+    }
+    .stButton>button:hover {
+        background-color: #2e7bcf;
+        border-color: white;
     }
     .header-box {
         text-align: center;
@@ -25,28 +30,19 @@ st.markdown("""
         color: white;
         border: 1px solid #2e7bcf;
     }
-    /* Estilização para os cards de contagem */
-    .metric-card {
-        background-color: #1a1a1a;
-        border: 1px solid #2e7bcf;
-        padding: 15px;
-        border-radius: 10px;
-        text-align: center;
-        color: white;
-    }
 </style>
 """, unsafe_allow_html=True)
 
 if "logado" not in st.session_state or not st.session_state.logado:
-    st.error("⚠️ Acesso negado. Por favor, faça login.")
+    st.error("⚠️ Acesso negado.")
     st.stop()
 
 if st.session_state.perfil not in ["Pastores", "Secretária"]:
-    st.warning("🚫 Acesso restrito apenas à liderança e secretaria.")
+    st.warning("🚫 Acesso restrito à liderança.")
     st.stop()
 
 # Cabeçalho Padronizado
-st.markdown('<div class="header-box"><h2>🔍 CONSULTA E MINISTÉRIOS</h2><p>Pesquisa de membros e resumo por departamento</p></div>', unsafe_allow_html=True)
+st.markdown('<div class="header-box"><h2>🔍 CONSULTA E MINISTÉRIOS</h2><p>Clique em um ministério para filtrar ou use a busca por nome</p></div>', unsafe_allow_html=True)
 
 if st.button("⬅️ VOLTAR AO MENU PRINCIPAL"):
     st.switch_page("app.py")
@@ -72,51 +68,58 @@ csv_url = obter_link_csv(URL_PLANILHA)
 df = carregar_dados(csv_url)
 
 if df is not None and not df.empty:
-    # --- FILTRO POR MINISTÉRIO (QUANTIDADES) ---
-    st.subheader("📊 Quantidade por Ministério")
     
-    # Lista de ministérios padrão (deve ser igual ao do cadastro)
+    # 2. BOTÕES DE FILTRO POR MINISTÉRIO
+    st.subheader("📊 Filtrar por Departamento")
     lista_ministerios = ["Louvor", "Mídia", "Recepção", "Infantil", "Intercessão", "Ação Social"]
     
-    # Criar colunas para exibir as contagens
+    # Inicializa o filtro no estado da sessão se não existir
+    if "filtro_min" not in st.session_state:
+        st.session_state.filtro_min = None
+
     cols = st.columns(len(lista_ministerios))
     
     for i, min_nome in enumerate(lista_ministerios):
-        # Conta quantas vezes o ministério aparece na coluna 'ministerio'
-        # Usamos str.contains porque um membro pode ter múltiplos ministérios
-        quantidade = df['ministerio'].str.contains(min_nome, na=False).sum()
-        with cols[i]:
-            st.markdown(f"""
-                <div class="metric-card">
-                    <small>{min_nome}</small>
-                    <h3 style='margin:0; color:#2e7bcf;'>{quantidade}</h3>
-                </div>
-            """, unsafe_allow_html=True)
-    
+        qtd = df['ministerio'].str.contains(min_nome, na=False).sum()
+        # O botão exibe o nome e a quantidade
+        if cols[i].button(f"{min_nome}\n({qtd})"):
+            st.session_state.filtro_min = min_nome
+
+    if st.session_state.filtro_min:
+        if st.button(f"❌ Limpar Filtro: {st.session_state.filtro_min}"):
+            st.session_state.filtro_min = None
+            st.rerun()
+
     st.divider()
 
-    # --- CAMPO DE PESQUISA ---
-    busca = st.text_input("Filtrar membros por nome:", placeholder="Ex: João Silva")
+    # 3. LÓGICA DE EXIBIÇÃO E BUSCA
+    busca = st.text_input("Ou pesquise um nome específico:", placeholder="Ex: João Silva")
+    
+    # Aplicando os filtros
+    df_exibir = df.copy()
+    
+    if st.session_state.filtro_min:
+        df_exibir = df_exibir[df_exibir['ministerio'].str.contains(st.session_state.filtro_min, na=False)]
     
     if busca:
-        resultado = df[df['nome'].str.contains(busca, case=False, na=False)]
+        df_exibir = df_exibir[df_exibir['nome'].str.contains(busca, case=False, na=False)]
+
+    # Exibição dos Resultados
+    if not df_exibir.empty:
+        st.success(f"Exibindo {len(df_exibir)} registro(s):")
+        st.dataframe(df_exibir, use_container_width=True)
         
-        if not resultado.empty:
-            st.success(f"Encontrado(s) {len(resultado)} registro(s):")
-            st.dataframe(resultado, use_container_width=True)
-            
-            for i, row in resultado.iterrows():
-                with st.expander(f"Ficha: {row['nome']}"):
-                    c1, c2 = st.columns(2)
-                    c1.write(f"**WhatsApp:** {row['whatsapp']}")
-                    c1.write(f"**Cargo:** {row['cargo']}")
-                    c2.write(f"**Nascimento:** {row['data_nascimento']}")
-                    c2.write(f"**Ministérios:** {row['ministerio']}")
-        else:
-            st.warning("Nenhum membro encontrado.")
+        for i, row in df_exibir.iterrows():
+            with st.expander(f"Ver ficha: {row['nome']}"):
+                c1, c2 = st.columns(2)
+                c1.write(f"**WhatsApp:** {row['whatsapp']}")
+                c1.write(f"**Cargo:** {row['cargo']}")
+                c2.write(f"**Nascimento:** {row['data_nascimento']}")
+                c2.write(f"**Ministérios:** {row['ministerio']}")
     else:
-        st.info("Utilize o campo acima para pesquisar nomes específicos.")
+        st.warning("Nenhum membro encontrado para os critérios selecionados.")
+
 else:
-    st.warning("⚠️ Planilha não encontrada ou vazia.")
+    st.error("⚠️ Planilha não encontrada ou vazia.")
 
 st.caption("ISOSED Cosmópolis - Gestão Ministerial")
