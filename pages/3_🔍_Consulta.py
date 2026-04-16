@@ -4,10 +4,13 @@ import pandas as pd
 # 1. Configuração de Estética e Segurança
 st.set_page_config(page_title="Consulta - ISOSED", page_icon="🔍", layout="wide")
 
+# CSS para manter o padrão visual de Central de Comando e esconder a barra lateral
 st.markdown("""
 <style>
     [data-testid="stSidebar"], [data-testid="stSidebarNav"] { display: none; }
     .main { background-color: #0e1117; }
+    
+    /* Estilização dos Botões de Ministério */
     .stButton>button {
         width: 100%;
         border-radius: 8px;
@@ -16,11 +19,16 @@ st.markdown("""
         border: 1px solid #2e7bcf;
         font-weight: bold;
         transition: 0.3s;
+        white-space: pre-wrap;
+        height: auto;
+        padding: 10px 5px;
     }
     .stButton>button:hover {
         background-color: #2e7bcf;
         border-color: white;
+        transform: scale(1.02);
     }
+    
     .header-box {
         text-align: center;
         padding: 20px;
@@ -30,19 +38,34 @@ st.markdown("""
         color: white;
         border: 1px solid #2e7bcf;
     }
+    
+    /* Link estilizado como botão para a ficha PDF */
+    .pdf-button {
+        display: block;
+        width: 100%;
+        text-align: center;
+        background-color: #d32f2f;
+        color: white !important;
+        padding: 10px;
+        border-radius: 5px;
+        text-decoration: none;
+        font-weight: bold;
+        margin-top: 10px;
+    }
 </style>
 """, unsafe_allow_html=True)
 
+# 2. Segurança de Acesso
 if "logado" not in st.session_state or not st.session_state.logado:
-    st.error("⚠️ Acesso negado.")
+    st.error("⚠️ Acesso negado. Por favor, faça login.")
     st.stop()
 
 if st.session_state.perfil not in ["Pastores", "Secretária"]:
-    st.warning("🚫 Acesso restrito à liderança.")
+    st.warning("🚫 Acesso restrito apenas à liderança e secretaria.")
     st.stop()
 
 # Cabeçalho Padronizado
-st.markdown('<div class="header-box"><h2>🔍 CONSULTA E MINISTÉRIOS</h2><p>Clique em um ministério para filtrar ou use a busca por nome</p></div>', unsafe_allow_html=True)
+st.markdown('<div class="header-box"><h2>🔍 CONSULTA E MINISTÉRIOS</h2><p>Pesquisa detalhada e prova de consentimento LGPD</p></div>', unsafe_allow_html=True)
 
 if st.button("⬅️ VOLTAR AO MENU PRINCIPAL"):
     st.switch_page("app.py")
@@ -50,6 +73,7 @@ if st.button("⬅️ VOLTAR AO MENU PRINCIPAL"):
 st.divider()
 
 # --- CONFIGURAÇÃO DA PLANILHA ---
+# Certifique-se de que a coluna do link da ficha na planilha se chama 'link_ficha'
 URL_PLANILHA = "https://docs.google.com/spreadsheets/d/1jtaWUZGAlDcCNctxIOyFaTUJ-Bt73L1WiVXxsBHqmas/edit?gid=0#gid=0"
 
 def obter_link_csv(url):
@@ -69,22 +93,22 @@ df = carregar_dados(csv_url)
 
 if df is not None and not df.empty:
     
-    # 2. BOTÕES DE FILTRO POR MINISTÉRIO
-    st.subheader("📊 Filtrar por Departamento")
+    # 3. BOTÕES DE FILTRO POR MINISTÉRIO (QUANTIDADES)
+    st.subheader("📊 Filtro por Departamento")
     lista_ministerios = ["Louvor", "Mídia", "Recepção", "Infantil", "Intercessão", "Ação Social"]
     
-    # Inicializa o filtro no estado da sessão se não existir
     if "filtro_min" not in st.session_state:
         st.session_state.filtro_min = None
 
     cols = st.columns(len(lista_ministerios))
     
     for i, min_nome in enumerate(lista_ministerios):
+        # Conta membros ativos no ministério
         qtd = df['ministerio'].str.contains(min_nome, na=False).sum()
-        # O botão exibe o nome e a quantidade
         if cols[i].button(f"{min_nome}\n({qtd})"):
             st.session_state.filtro_min = min_nome
 
+    # Opção para limpar filtro selecionado
     if st.session_state.filtro_min:
         if st.button(f"❌ Limpar Filtro: {st.session_state.filtro_min}"):
             st.session_state.filtro_min = None
@@ -92,34 +116,42 @@ if df is not None and not df.empty:
 
     st.divider()
 
-    # 3. LÓGICA DE EXIBIÇÃO E BUSCA
-    busca = st.text_input("Ou pesquise um nome específico:", placeholder="Ex: João Silva")
+    # 4. LÓGICA DE BUSCA E EXIBIÇÃO
+    busca = st.text_input("Pesquisar por nome específico:", placeholder="Ex: João Silva")
     
-    # Aplicando os filtros
+    # Filtragem dos dados
     df_exibir = df.copy()
-    
     if st.session_state.filtro_min:
         df_exibir = df_exibir[df_exibir['ministerio'].str.contains(st.session_state.filtro_min, na=False)]
-    
     if busca:
         df_exibir = df_exibir[df_exibir['nome'].str.contains(busca, case=False, na=False)]
 
-    # Exibição dos Resultados
+    # Exibição dos Resultados em Cards Individuais
     if not df_exibir.empty:
         st.success(f"Exibindo {len(df_exibir)} registro(s):")
-        st.dataframe(df_exibir, use_container_width=True)
         
         for i, row in df_exibir.iterrows():
-            with st.expander(f"Ver ficha: {row['nome']}"):
+            with st.expander(f"👤 {row['nome']} - {row['cargo']}"):
                 c1, c2 = st.columns(2)
-                c1.write(f"**WhatsApp:** {row['whatsapp']}")
-                c1.write(f"**Cargo:** {row['cargo']}")
-                c2.write(f"**Nascimento:** {row['data_nascimento']}")
-                c2.write(f"**Ministérios:** {row['ministerio']}")
+                with c1:
+                    st.write(f"**📞 WhatsApp:** {row['whatsapp']}")
+                    st.write(f"**🎂 Nascimento:** {row['data_nascimento']}")
+                with c2:
+                    st.write(f"**🏛️ Ministérios:** {row['ministerio']}")
+                    st.write(f"**🕒 Cadastrado em:** {row['data_cadastro']}")
+                
+                st.divider()
+                
+                # BUSCA DA FICHA DIGITALIZADA (GOOGLE DRIVE)
+                # Verifica se existe o link na coluna 'link_ficha' da planilha
+                if "link_ficha" in row and pd.notnull(row['link_ficha']):
+                    st.markdown(f'<a href="{row["link_ficha"]}" target="_blank" class="pdf-button">📄 ABRIR FICHA ASSINADA (PDF)</a>', unsafe_allow_html=True)
+                else:
+                    st.info("ℹ️ Ficha digitalizada não vinculada a este registro.")
     else:
-        st.warning("Nenhum membro encontrado para os critérios selecionados.")
-
+        st.warning("Nenhum membro encontrado com os critérios atuais.")
 else:
-    st.error("⚠️ Planilha não encontrada ou vazia.")
+    st.error("⚠️ Erro: Não foi possível carregar a base de dados. Verifique o link da planilha.")
 
-st.caption("ISOSED Cosmópolis - Gestão Ministerial")
+st.markdown("---")
+st.caption("ISOSED Cosmópolis - Sistema em conformidade com a Lei 13.709/2018 (LGPD)")
