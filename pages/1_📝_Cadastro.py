@@ -43,33 +43,36 @@ with st.form("form_cadastro", clear_on_submit=True):
     
     submit = st.form_submit_button("Gravar no Sistema")
 
-    if submit:
+   if submit:
         if not nome or not consentimento:
-            st.error("Nome e Consentimento são obrigatórios.")
+            st.error("❌ Erro: O Nome e o Consentimento são obrigatórios.")
         else:
             try:
-                # Criar o registo em formato de texto para evitar erro 400
-                novo_registo = pd.DataFrame([{
+                # 1. Transformar TUDO em string para evitar erro de formato
+                novo_membro = pd.DataFrame([{
                     "data_cadastro": str(datetime.now().strftime("%d/%m/%Y %H:%M")),
                     "nome": str(nome).strip(),
                     "whatsapp": str(whatsapp).strip(),
                     "data_nascimento": str(nascimento.strftime("%d/%m/%Y")),
                     "cargo": str(cargo),
                     "ministerio": str(", ".join(ministerios)),
-                    "status": "Ativo",
+                    "status": str(status),
                     "consentimento_lgpd": "Sim",
                     "cadastrado_por": str(st.session_state.perfil)
                 }])
 
-                # LER E ATUALIZAR (Passando explicitamente a folha e o URL)
-                dados_atuais = conn.read(spreadsheet=URL_PLANILHA, worksheet="Membros")
-                df_final = pd.concat([dados_atuais, novo_registo], ignore_index=True)
+                # 2. Gravação Direta (Tente ler apenas os cabeçalhos primeiro)
+                # Isso evita que o erro 400 ocorra por causa de dados antigos
+                conn.update(
+                    spreadsheet=URL_PLANILHA, 
+                    worksheet="Membros", 
+                    data=novo_membro,
+                    append=True # Isso anexa a linha sem precisar ler a planilha toda antes
+                )
                 
-                conn.update(spreadsheet=URL_PLANILHA, worksheet="Membros", data=df_final)
-                
-                st.success(f"Registo de {nome} efetuado com sucesso!")
+                st.success(f"✅ Sucesso! {nome} foi registrado na base da ISOSED.")
                 st.balloons()
             except Exception as e:
-                st.error(f"Erro ao comunicar com a Planilha: {e}")
+                st.error(f"Erro ao salvar: {e}")
 
 st.caption("ISOSED Cosmópolis - Sistema de Gestão Interna")
