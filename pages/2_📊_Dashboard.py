@@ -1,10 +1,23 @@
 import streamlit as st
 import pandas as pd
+import streamlit as st
+# ... outros imports ...
+
+# CSS para esconder a barra lateral nesta página específica
+st.markdown("""
+    <style>
+    [data-testid="stSidebar"], [data-testid="stSidebarNav"] {
+        display: none;
+    }
+    </style>
+    """, unsafe_allow_html=True)
+
+# Botão de voltar
 if st.button("⬅️ Voltar ao Menu Principal"):
     st.switch_page("app.py")
+
 st.divider()
-# 1. Configuração de Layout (Wide para caber os cartões de métricas)
-st.set_page_config(page_title="Dashboard - ISOSED", page_icon="📊", layout="wide")
+# ... restante do seu código do dashboard ...
 
 # Proteção de Acesso
 if "logado" not in st.session_state or not st.session_state.logado:
