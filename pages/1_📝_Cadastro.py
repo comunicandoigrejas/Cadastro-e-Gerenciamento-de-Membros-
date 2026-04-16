@@ -25,9 +25,18 @@ with st.form("formulario_membro", clear_on_submit=True):
     col1, col2 = st.columns(2)
     
     with col1:
+       with col1:
         nome = st.text_input("Nome Completo")
         whatsapp = st.text_input("WhatsApp (com DDD)")
-        nascimento = st.date_input("Data de Nascimento", format="DD/MM/YYYY")
+        
+        # Calendário configurado para idades variadas
+        nascimento = st.date_input(
+            "Data de Nascimento",
+            value=datetime(2000, 1, 1),
+            min_value=datetime(1930, 1, 1),
+            max_value=datetime.now(),
+            format="DD/MM/YYYY"
+        )
     
     with col2:
         cargo = st.selectbox("Cargo Ministerial", ["Membro", "Obreiro(a)", "Diácono/Isa", "Presbítero", "Evangelista", "Pastor(a)"])
