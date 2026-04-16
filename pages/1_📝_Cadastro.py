@@ -2,12 +2,12 @@ import streamlit as st
 import requests
 from datetime import datetime
 
-# 1. Configuração de Estética e Segurança
+# 1. Configuração e Estética
 st.set_page_config(page_title="Cadastro - ISOSED", page_icon="📝", layout="centered")
 
-# CSS para manter o padrão visual e esconder a barra lateral
+# CSS corrigido para evitar SyntaxError
 st.markdown("""
-    <style>
+<style>
     [data-testid="stSidebar"], [data-testid="stSidebarNav"] { display: none; }
     .main { background-color: #0e1117; }
     .stButton>button {
@@ -27,9 +27,10 @@ st.markdown("""
         color: white;
         border: 1px solid #2e7bcf;
     }
-    </style>
-    """, unsafe_allow_html=True)
+</style>
+""", unsafe_allow_html=True)
 
+# 2. Segurança e Navegação
 if "logado" not in st.session_state or not st.session_state.logado:
     st.error("⚠️ Acesso negado. Por favor, faça login.")
     st.stop()
@@ -43,21 +44,21 @@ if st.button("⬅️ VOLTAR AO MENU PRINCIPAL"):
 st.divider()
 
 # --- CONFIGURAÇÃO DA CONEXÃO ---
-# Coloque aqui a URL que você gerou no "Implantar" do Google Apps Script
-WEBAPP_URL = https://script.google.com/macros/s/AKfycbweynuNo3p4lv7eC3xT7iW0QJwP7N9SvrE-XBECwq7ACEO6BiMyGSAeE2RBl7izXELn/exec"
+# COLOQUE ABAIXO O SEU LINK DO APPS SCRIPT (TERMINADO EM /exec)
+WEBAPP_URL = "https://script.google.com/macros/s/AKfycbweynuNo3p4lv7eC3xT7iW0QJwP7N9SvrE-XBECwq7ACEO6BiMyGSAeE2RBl7izXELn/exec"
 
-# 2. Formulário de Cadastro
+# 3. Formulário de Cadastro
 with st.form("form_cadastro", clear_on_submit=True):
     nome = st.text_input("Nome Completo")
     whatsapp = st.text_input("WhatsApp com DDD (Somente números)")
     
-    # Ajuste das Datas: Início em 1950 e final no ano atual
+    # Ajuste das Datas: Início em 1950 e final hoje
     hoje = datetime.now()
     nascimento = st.date_input(
         "Data de Nascimento", 
-        value=datetime(2000, 1, 1), # Data padrão ao abrir
-        min_value=datetime(1950, 1, 1), # Limite inferior
-        max_value=hoje, # Limite superior (Hoje)
+        value=datetime(2000, 1, 1),
+        min_value=datetime(1950, 1, 1),
+        max_value=hoje,
         format="DD/MM/YYYY"
     )
     
@@ -73,10 +74,9 @@ with st.form("form_cadastro", clear_on_submit=True):
     if submit:
         if not nome or not consentimento:
             st.error("❌ Erro: O Nome e o Consentimento são obrigatórios.")
-        elif WEBAPP_URL == "https://script.google.com/macros/s/AKfycbweynuNo3p4lv7eC3xT7iW0QJwP7N9SvrE-XBECwq7ACEO6BiMyGSAeE2RBl7izXELn/exec":
-            st.error("⚠️ Erro Técnico: A URL do Apps Script não foi configurada no código.")
+        elif "SUA_URL" in WEBAPP_URL:
+            st.error("⚠️ Erro: Você esqueceu de colocar a URL do seu Apps Script no código.")
         else:
-            # Preparação dos dados para envio
             dados = {
                 "data_cadastro": hoje.strftime("%d/%m/%Y %H:%M"),
                 "nome": str(nome).strip(),
@@ -90,15 +90,14 @@ with st.form("form_cadastro", clear_on_submit=True):
             }
             
             try:
-                # Envia para a ponte do Google Sheets
                 response = requests.post(WEBAPP_URL, json=dados, timeout=10)
-                
                 if response.text == "Sucesso":
-                    st.success(f"✅ Sucesso! {nome} foi registrado na base da ISOSED.")
+                    st.success(f"✅ Sucesso! {nome} foi registrado.")
                     st.balloons()
                 else:
-                    st.error(f"Erro no servidor da planilha: {response.text}")
+                    st.error(f"Erro no servidor: {response.text}")
             except Exception as e:
                 st.error(f"Falha na conexão: {e}")
 
 st.caption("ISOSED Cosmópolis - Gestão de Dados Segura")
+st.caption("Desenvolvido por Comunicando Igrejas")
