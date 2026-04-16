@@ -56,7 +56,7 @@ with st.form("formulario_membro", clear_on_submit=True):
             st.error("❌ Erro: O Nome e o Consentimento são obrigatórios.")
         else:
             try:
-                # Preparando os dados de forma simplificada para evitar Erro 400
+     # Preparando os dados de forma simplificada para evitar Erro 400
 novo_membro = pd.DataFrame([{
     "data_cadastro": str(datetime.now().strftime("%d/%m/%Y %H:%M")),
     "nome": str(nome),
@@ -68,7 +68,6 @@ novo_membro = pd.DataFrame([{
     "consentimento_lgpd": "Sim",
     "cadastrado_por": str(st.session_state.perfil)
 }])
-
                 # Ler dados existentes
                 df_existente = conn.read(worksheet="Membros")
                 
