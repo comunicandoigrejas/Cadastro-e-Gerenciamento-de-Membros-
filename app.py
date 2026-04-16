@@ -120,4 +120,5 @@ else:
             st.session_state.perfil = None
             st.rerun()
 
-    st.caption("ISOSED Cosmópolis - Gestão Inteligente v2.0")
+    st.caption("ISOSED Cosmópolis - Gestão Inteligente")
+    st.caption("Desenvolvido por Comunicando Igrejas")
