@@ -1,64 +1,104 @@
 import streamlit as st
 import pandas as pd
 
-# 1. Configurações Iniciais e CSS para esconder a barra lateral
+# 1. Configuração de Estética e Segurança
 st.set_page_config(page_title="Dashboard - ISOSED", page_icon="📊", layout="wide")
 
+# CSS para manter o padrão visual de Central de Comando
 st.markdown("""
-    <style>
-    [data-testid="stSidebar"], [data-testid="stSidebarNav"] {
-        display: none;
+<style>
+    [data-testid="stSidebar"], [data-testid="stSidebarNav"] { display: none; }
+    .main { background-color: #0e1117; }
+    .stButton>button {
+        width: 100%;
+        border-radius: 8px;
+        background-color: #1a1a1a;
+        color: white;
+        border: 1px solid #2e7bcf;
+        font-weight: bold;
     }
-    </style>
-    """, unsafe_allow_html=True)
+    .header-box {
+        text-align: center;
+        padding: 20px;
+        background: linear-gradient(135deg, #0a0a0a 0%, #003366 100%);
+        border-radius: 12px;
+        margin-bottom: 20px;
+        color: white;
+        border: 1px solid #2e7bcf;
+    }
+</style>
+""", unsafe_allow_html=True)
 
-# 2. Segurança e Navegação
 if "logado" not in st.session_state or not st.session_state.logado:
-    st.error("⚠️ Acesso negado.")
+    st.error("⚠️ Acesso negado. Por favor, faça login.")
     st.stop()
 
 if st.session_state.perfil not in ["Pastores", "Secretária"]:
-    st.warning("🚫 Acesso restrito.")
+    st.warning("🚫 Acesso restrito apenas à liderança e secretaria.")
     st.stop()
 
-if st.button("⬅️ Voltar ao Menu Principal"):
+# Cabeçalho Centralizado com Degradê
+st.markdown('<div class="header-box"><h2>📊 DASHBOARD ESTRATÉGICO</h2><p>Indicadores de Crescimento e Gestão ISOSED</p></div>', unsafe_allow_html=True)
+
+# Botão de Voltar no padrão preto/azul
+if st.button("⬅️ VOLTAR AO MENU PRINCIPAL"):
     st.switch_page("app.py")
 
-st.title("📊 Painel de Gestão Estratégica")
 st.divider()
 
-# 3. Carregamento de Dados
+# --- CONFIGURAÇÃO DOS DADOS ---
 URL_PLANILHA = "https://docs.google.com/spreadsheets/d/1jtaWUZGAlDcCNctxIOyFaTUJ-Bt73L1WiVXxsBHqmas/edit?gid=0#gid=0"
+
 if "/edit" in URL_PLANILHA:
     CSV_URL = URL_PLANILHA.split("/edit")[0] + "/export?format=csv"
 else:
     CSV_URL = URL_PLANILHA
 
 @st.cache_data(ttl=60)
-def load_data():
+def carregar_dados():
     try:
         return pd.read_csv(CSV_URL)
     except:
         return None
 
-df = load_data()
+df = carregar_dados()
 
+# 2. Visualização dos Indicadores
 if df is not None and not df.empty:
-    # Layout igual ao que definimos nas imagens
-    m1, m2, m3 = st.columns(3)
+    # Cartões de Métricas no topo
+    st.subheader("📌 Indicadores Rápidos")
+    m1, m2, m3, m4 = st.columns(4)
+    
     m1.metric("Total de Membros", len(df))
+    
     if "cargo" in df.columns:
-        m2.metric("Obreiros", len(df[df["cargo"] != "Membro"]))
-    m3.metric("Cidade", "Cosmópolis - SP")
+        obreiros = len(df[df["cargo"] != "Membro"])
+        m2.metric("Corpo de Obreiros", obreiros)
     
+    if "status" in df.columns:
+        visitantes = len(df[df["status"] == "Visitante"])
+        m3.metric("Visitantes Ativos", visitantes)
+        
+    m4.metric("Unidade", "Cosmópolis - SP")
+
     st.divider()
-    
+
+    # Gráficos de Análise
     c1, c2 = st.columns(2)
+
     with c1:
-        st.subheader("Por Cargo")
-        st.bar_chart(df["cargo"].value_counts())
+        st.subheader("👥 Composição Ministerial")
+        if "cargo" in df.columns:
+            st.bar_chart(df["cargo"].value_counts())
+
     with c2:
-        st.subheader("Lista Completa")
-        st.dataframe(df, use_container_width=True)
+        st.subheader("📈 Status dos Registros")
+        if "status" in df.columns:
+            st.area_chart(df["status"].value_counts())
+
 else:
-    st.warning("Nenhum dado encontrado.")
+    st.warning("⚠️ Não foi possível carregar os dados ou a planilha está vazia.")
+
+st.markdown("<br><br>", unsafe_allow_html=True)
+st.caption("ISOSED Cosmópolis - Dashboard Analítico")
+st.caption("Desenvolvido por Comunicando Igrejas")
