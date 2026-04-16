@@ -17,6 +17,10 @@ if "perfil" not in st.session_state:
 # CSS para o padrão "Central de Comando"
 st.markdown("""
 <style>
+/* Esconde a barra de ferramentas superior (Share, Edit, GitHub, etc) */
+    header[data-testid="stHeader"] {
+        display: none !important;
+    }
     [data-testid="stSidebar"], [data-testid="stSidebarNav"] { display: none; }
     .main { background-color: #0e1117; }
     .stButton>button {
