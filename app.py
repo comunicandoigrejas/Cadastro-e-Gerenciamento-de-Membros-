@@ -92,21 +92,20 @@ else:
         </div>
     """, unsafe_allow_html=True)
 
-    # Organização em 3 colunas para os botões
-    c1, c2, c3 = st.columns(3)
+    # Organização em 2 colunas para os botões
+    c1, c2 = st.columns(2)
 
     with c1:
         if st.button("📝 NOVO CADASTRO"):
             st.switch_page("pages/1_📝_Cadastro.py")
 
-    with c2:
         if st.session_state.perfil in ["Pastores", "Secretária"]:
             if st.button("🔍 CONSULTAR MEMBRO"):
                 st.switch_page("pages/3_🔍_Consulta.py")
         else:
             st.button("🔒 CONSULTA (BLOQUEADO)", disabled=True)
 
-    with c3:
+    with c2:
         if st.session_state.perfil in ["Pastores", "Secretária"]:
             if st.button("📊 DASHBOARD"):
                 st.switch_page("pages/2_📊_Dashboard.py")
