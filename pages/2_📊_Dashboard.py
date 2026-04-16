@@ -28,7 +28,7 @@ st.title("📊 Painel de Gestão Estratégica")
 st.divider()
 
 # 3. Carregamento de Dados
-URL_PLANILHA = "SUA_URL_DA_PLANILHA_AQUI"
+URL_PLANILHA = "https://docs.google.com/spreadsheets/d/1jtaWUZGAlDcCNctxIOyFaTUJ-Bt73L1WiVXxsBHqmas/edit?gid=0#gid=0"
 if "/edit" in URL_PLANILHA:
     CSV_URL = URL_PLANILHA.split("/edit")[0] + "/export?format=csv"
 else:
