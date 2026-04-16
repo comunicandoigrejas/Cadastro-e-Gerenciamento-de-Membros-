@@ -7,6 +7,10 @@ st.set_page_config(page_title="Consulta - ISOSED", page_icon="🔍", layout="wid
 # CSS para manter o padrão visual de Central de Comando e esconder a barra lateral
 st.markdown("""
 <style>
+/* Esconde a barra de ferramentas superior (Share, Edit, GitHub, etc) */
+    header[data-testid="stHeader"] {
+        display: none !important;
+    }
     [data-testid="stSidebar"], [data-testid="stSidebarNav"] { display: none; }
     .main { background-color: #0e1117; }
     
