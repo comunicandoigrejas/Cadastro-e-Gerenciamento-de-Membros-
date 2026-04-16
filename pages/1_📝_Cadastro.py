@@ -50,15 +50,15 @@ with st.form("form_cadastro", clear_on_submit=True):
             try:
                 # Criar o registo em formato de texto para evitar erro 400
                 novo_registo = pd.DataFrame([{
-                    "data_cadastro": datetime.now().strftime("%d/%m/%Y %H:%M"),
-                    "nome": str(nome),
-                    "whatsapp": str(whatsapp),
-                    "data_nascimento": nascimento.strftime("%d/%m/%Y"),
+                    "data_cadastro": str(datetime.now().strftime("%d/%m/%Y %H:%M")),
+                    "nome": str(nome).strip(),
+                    "whatsapp": str(whatsapp).strip(),
+                    "data_nascimento": str(nascimento.strftime("%d/%m/%Y")),
                     "cargo": str(cargo),
-                    "ministerio": ", ".join(ministerios),
+                    "ministerio": str(", ".join(ministerios)),
                     "status": "Ativo",
                     "consentimento_lgpd": "Sim",
-                    "cadastrado_por": st.session_state.perfil
+                    "cadastrado_por": str(st.session_state.perfil)
                 }])
 
                 # LER E ATUALIZAR (Passando explicitamente a folha e o URL)
