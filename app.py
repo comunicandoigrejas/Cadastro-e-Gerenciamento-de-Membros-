@@ -92,25 +92,28 @@ else:
         </div>
     """, unsafe_allow_html=True)
 
-    # Organização dos Botões em Colunas
-    c1, c2 = st.columns(2)
+    # Organização em 3 colunas para os botões
+    c1, c2, c3 = st.columns(3)
 
     with c1:
-        # Botão que redireciona para a página de cadastro
         if st.button("📝 NOVO CADASTRO"):
             st.switch_page("pages/1_📝_Cadastro.py")
 
     with c2:
-        # Botão do Dashboard (Visível apenas para Pastores e Secretária)
         if st.session_state.perfil in ["Pastores", "Secretária"]:
-            if st.button("📊 DASHBOARD ESTRATÉGICO"):
+            if st.button("🔍 CONSULTAR MEMBRO"):
+                st.switch_page("pages/3_🔍_Consulta.py")
+        else:
+            st.button("🔒 CONSULTA (BLOQUEADO)", disabled=True)
+
+    with c3:
+        if st.session_state.perfil in ["Pastores", "Secretária"]:
+            if st.button("📊 DASHBOARD"):
                 st.switch_page("pages/2_📊_Dashboard.py")
         else:
-            st.button("🔒 DASHBOARD (BLOQUEADO)", disabled=True)
+            st.button("🔒 DASH (BLOQUEADO)", disabled=True)
 
     st.markdown("<br>", unsafe_allow_html=True)
-    
-    # Botão de Sair no fundo
     if st.button("🚪 ENCERRAR SESSÃO"):
         st.session_state.logado = False
         st.rerun()
