@@ -52,35 +52,40 @@ with st.form("formulario_membro", clear_on_submit=True):
     if submit:
         if not nome or not consentimento:
             st.error("❌ Erro: Nome e Consentimento são obrigatórios.")
-        else:
-            try:
-                # Criando a nova linha
-                nova_linha = pd.DataFrame([{
-                    "data_cadastro": datetime.now().strftime("%d/%m/%Y %H:%M"),
-                    "nome": str(nome).strip(),
-                    "whatsapp": str(whatsapp).strip(),
-                    "data_nascimento": nascimento.strftime("%d/%m/%Y"),
-                    "cargo": str(cargo),
-                    "ministerio": ", ".join(ministerios),
-                    "status": str(status),
-                    "consentimento_lgpd": "Sim",
-                    "cadastrado_por": str(st.session_state.perfil)
-                }])
+       import streamlit as st
+import requests # Adicione esta biblioteca no topo e no seu requirements.txt
+from datetime import datetime
 
-                # MÉTODO CORRETO: Ler -> Concatenar -> Atualizar
-                # Lendo dados atuais
-                dados_existentes = conn.read(spreadsheet=URL_PLANILHA, worksheet="Membros")
-                
-                # Juntando os dados antigos com o novo membro
-                dados_atualizados = pd.concat([dados_existentes, nova_linha], ignore_index=True)
-                
-                # Enviando tudo de volta para a planilha
-                conn.update(spreadsheet=URL_PLANILHA, worksheet="Membros", data=dados_atualizados)
-                
+# ... (Mantenha as proteções de acesso e o formulário como estão) ...
+
+if submit:
+    if not nome or not consentimento:
+        st.error("❌ Nome e Consentimento são obrigatórios.")
+    else:
+        # URL que você copiou do Apps Script
+        WEBAPP_URL = "https://script.google.com/macros/s/AKfycbzb2zuulVvUTyHEQ8kyBiCaTqj7zhvMZKXy4vpJQifHgqiGZOsNFkH0X80J-aTfG5_F/exec"
+        
+        dados = {
+            "data_cadastro": datetime.now().strftime("%d/%m/%Y %H:%M"),
+            "nome": nome,
+            "whatsapp": whatsapp,
+            "data_nascimento": nascimento.strftime("%d/%m/%Y"),
+            "cargo": cargo,
+            "ministerio": ", ".join(ministerios),
+            "status": status,
+            "consentimento_lgpd": "Sim",
+            "cadastrado_por": st.session_state.perfil
+        }
+        
+        try:
+            response = requests.post(WEBAPP_URL, json=dados)
+            if response.text == "Sucesso":
                 st.success(f"✅ Sucesso! {nome} foi registrado.")
                 st.balloons()
-            except Exception as e:
-                st.error(f"Erro ao salvar: {e}")
+            else:
+                st.error(f"Erro no servidor: {response.text}")
+        except Exception as e:
+            st.error(f"Erro ao enviar dados: {e}")
 
 st.markdown("---")
 st.caption("ISOSED Cosmópolis - Gestão Interna")
