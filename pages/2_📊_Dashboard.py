@@ -17,7 +17,7 @@ st.title("📊 Painel de Crescimento - ISOSED")
 
 # --- CONFIGURAÇÃO DOS DADOS ---
 # Substitua o link abaixo pelo link de compartilhamento da sua planilha
-URL_PLANILHA = "https://docs.google.com/spreadsheets/d/SEU_ID_DA_PLANILHA_AQUI/edit#gid=0"
+URL_PLANILHA = "https://docs.google.com/spreadsheets/d/1jtaWUZGAlDcCNctxIOyFaTUJ-Bt73L1WiVXxsBHqmas/edit?gid=0#gid=0"
 
 # Esta lógica transforma o link do navegador num link de dados CSV para o Python
 if "/edit" in URL_PLANILHA:
