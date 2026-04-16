@@ -45,7 +45,7 @@ st.divider()
 with st.form("form_cadastro", clear_on_submit=True):
     nome = st.text_input("Nome Completo")
     whatsapp = st.text_input("WhatsApp com DDD")
-    nascimento = st.date_input("Data de Nascimento", value=datetime(1990, 1, 1))
+    nascimento = st.date_input("Data de Nascimento", value=datetime(01, 01, 1950))
     cargo = st.selectbox("Cargo Ministerial", ["Membro", "Obreiro(a)", "Diácono/Isa", "Presbítero", "Evangelista", "Pastor(a)"])
     consentimento = st.checkbox("Membro autorizou o uso de dados (LGPD)")
     
