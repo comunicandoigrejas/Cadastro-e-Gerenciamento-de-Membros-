@@ -57,7 +57,7 @@ with st.form("formulario_membro", clear_on_submit=True):
         else:
             try:
      # Preparando os dados de forma simplificada para evitar Erro 400
-novo_membro = pd.DataFrame([{
+    novo_membro = pd.DataFrame([{
             "data_cadastro": str(datetime.now().strftime("%d/%m/%Y %H:%M")),
             "nome": str(nome),
             "whatsapp": str(whatsapp),
