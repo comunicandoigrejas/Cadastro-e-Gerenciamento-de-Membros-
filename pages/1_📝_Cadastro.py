@@ -58,15 +58,15 @@ with st.form("formulario_membro", clear_on_submit=True):
             try:
      # Preparando os dados de forma simplificada para evitar Erro 400
 novo_membro = pd.DataFrame([{
-    "data_cadastro": str(datetime.now().strftime("%d/%m/%Y %H:%M")),
-    "nome": str(nome),
-    "whatsapp": str(whatsapp),
-    "data_nascimento": str(nascimento.strftime("%d/%m/%Y")), # Formata a data como texto
-    "cargo": str(cargo),
-    "ministerio": str(", ".join(ministerios)),
-    "status": str(status),
-    "consentimento_lgpd": "Sim",
-    "cadastrado_por": str(st.session_state.perfil)
+        "data_cadastro": str(datetime.now().strftime("%d/%m/%Y %H:%M")),
+        "nome": str(nome),
+        "whatsapp": str(whatsapp),
+        "data_nascimento": str(nascimento.strftime("%d/%m/%Y")), # Formata a data como texto
+        "cargo": str(cargo),
+        "ministerio": str(", ".join(ministerios)),
+        "status": str(status),
+        "consentimento_lgpd": "Sim",
+        "cadastrado_por": str(st.session_state.perfil)
 }])
                 # Ler dados existentes
                 df_existente = conn.read(worksheet="Membros")
