@@ -83,7 +83,7 @@ if not st.session_state.logado:
                 else:
                     st.error("Credenciais incorretas.")
 
-# --- TELA INICIAL (MENU DE BOTÕES) ---
+# --- TELA INICIAL (MENU DE BOTÕES 2x2) ---
 else:
     st.markdown(f"""
         <div class="login-header">
@@ -92,29 +92,39 @@ else:
         </div>
     """, unsafe_allow_html=True)
 
-    # Organização em 2 colunas para os botões
-    c1, c2 = st.columns(2)
+    # Primeira Linha de Botões
+    row1_col1, row1_col2 = st.columns(2)
 
-    with c1:
+    with row1_col1:
         if st.button("📝 NOVO CADASTRO"):
             st.switch_page("pages/1_📝_Cadastro.py")
 
+    with row1_col2:
         if st.session_state.perfil in ["Pastores", "Secretária"]:
             if st.button("🔍 CONSULTAR MEMBRO"):
                 st.switch_page("pages/3_🔍_Consulta.py")
         else:
-            st.button("🔒 CONSULTA (BLOQUEADO)", disabled=True)
+            st.button("🔒 CONSULTA (RESTRITO)", disabled=True)
 
-    with c2:
+    # Espaçamento entre as linhas
+    st.markdown("<div style='margin-top: 10px;'></div>", unsafe_allow_html=True)
+
+    # Segunda Linha de Botões
+    row2_col1, row2_col2 = st.columns(2)
+
+    with row2_col1:
         if st.session_state.perfil in ["Pastores", "Secretária"]:
             if st.button("📊 DASHBOARD"):
                 st.switch_page("pages/2_📊_Dashboard.py")
         else:
-            st.button("🔒 DASH (BLOQUEADO)", disabled=True)
+            st.button("🔒 DASHBOARD (RESTRITO)", disabled=True)
+
+    with row2_col2:
+        if st.button("🚪 ENCERRAR SESSÃO"):
+            st.session_state.logado = False
+            st.rerun()
 
     st.markdown("<br>", unsafe_allow_html=True)
-    if st.button("🚪 ENCERRAR SESSÃO"):
-        st.session_state.logado = False
-        st.rerun()
+    st.caption("ISOSED Cosmópolis - Gestão Inteligente")
 
     st.caption("ISOSED Cosmópolis - Gestão Inteligente")
