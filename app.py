@@ -127,4 +127,4 @@ else:
     st.markdown("<br>", unsafe_allow_html=True)
     st.caption("ISOSED Cosmópolis - Gestão Inteligente")
 
-    st.caption("ISOSED Cosmópolis - Gestão Inteligente")
+    st.caption("Desenvolvido por Comunicando Igrejas")
