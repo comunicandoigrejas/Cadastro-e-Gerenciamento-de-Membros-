@@ -8,7 +8,7 @@ st.set_page_config(
     initial_sidebar_state="collapsed"
 )
 
-# Estilização CSS para aproximar do layout da imagem (Dark Mode & Professional)
+# Estilização CSS para o visual profissional Dark/Blue
 st.markdown("""
     <style>
     .main {
@@ -20,25 +20,31 @@ st.markdown("""
         height: 3em;
         background-color: #2e7bcf;
         color: white;
+        font-weight: bold;
     }
     .login-header {
         text-align: center;
-        padding: 20px;
-        background: linear-gradient(90deg, #1a1a1a, #2e7bcf);
-        border-radius: 10px;
+        padding: 30px;
+        background: linear-gradient(135deg, #1a1a1a 0%, #004a99 100%);
+        border-radius: 15px;
         margin-bottom: 25px;
         color: white;
+        border: 1px solid #2e7bcf;
+    }
+    h1 {
+        font-family: 'Trebuchet MS', sans-serif;
+        letter-spacing: 2px;
     }
     </style>
-    """, unsafe_allow_status_code=True)
+    """, unsafe_allow_html=True) # CORRIGIDO: O nome correto é unsafe_allow_html
 
-# 2. Inicialização do Estado
+# 2. Inicialização do Estado de Sessão
 if "logado" not in st.session_state:
     st.session_state.logado = False
 if "perfil" not in st.session_state:
     st.session_state.perfil = None
 
-# Base de Dados de Usuários (Mantenha as suas senhas reais aqui)
+# Base de Dados de Usuários
 USUARIOS = {
     "pastor": {"senha": "123", "perfil": "Pastores"},
     "secretaria": {"senha": "456", "perfil": "Secretária"},
@@ -54,52 +60,50 @@ def validar_login(usuario, senha):
 
 # --- TELA DE LOGIN ESTILIZADA ---
 if not st.session_state.logado:
-    # Cabeçalho baseado na imagem
     st.markdown("""
         <div class="login-header">
             <h1>INSTITUCIONAL ISOSED</h1>
-            <p>Sistema Inteligente de Gestão Eclesiástica - Cosmópolis/SP</p>
+            <p style="opacity: 0.8;">Sistema de Gestão Eclesiástica | Cosmópolis/SP</p>
         </div>
-    """, unsafe_allow_status_code=True)
+    """, unsafe_allow_html=True)
 
     with st.container():
-        left_co, cent_co, last_co = st.columns([1,2,1])
+        # Centralizando o formulário
+        left_co, cent_co, last_co = st.columns([0.5, 3, 0.5])
         with cent_co:
-            st.subheader("Autenticação Requerida")
-            usuario = st.text_input("Identificação do Usuário", placeholder="Ex: pastor")
-            senha = st.text_input("Chave de Acesso", type="password", placeholder="••••••••")
-            
-            if st.button("ACESSAR PORTAL"):
-                if validar_login(usuario, senha):
-                    st.rerun()
-                else:
-                    st.error("Credenciais não reconhecidas pelo sistema.")
-            
-            st.markdown("---")
-            st.caption("Acesso monitorado. Em conformidade com a LGPD.")
+            with st.form("login_form"):
+                usuario = st.text_input("Usuário", placeholder="Identificação")
+                senha = st.text_input("Senha", type="password", placeholder="••••••••")
+                botao = st.form_submit_button("ACESSAR PORTAL")
+                
+                if botao:
+                    if validar_login(usuario, senha):
+                        st.rerun()
+                    else:
+                        st.error("Credenciais incorretas.")
 
-# --- APÓS O LOGIN (MENU PRINCIPAL) ---
+# --- APÓS O LOGIN ---
 else:
     st.sidebar.title(f"⛪ ISOSED")
-    st.sidebar.write(f"Conectado como: **{st.session_state.perfil}**")
+    st.sidebar.info(f"Conectado: {st.session_state.perfil}")
     
     if st.sidebar.button("Encerrar Sessão"):
         st.session_state.logado = False
         st.rerun()
 
-    # Página Inicial Pós-Login
-    st.title(f"Bem-vindo ao Portal, {st.session_state.perfil}")
+    st.title(f"Bem-vindo, {st.session_state.perfil}")
     
-    # Cartões de Atalho Estilizados
+    # Cartões de Atalho
     c1, c2 = st.columns(2)
     with c1:
         with st.container(border=True):
             st.write("### 📝 Cadastros")
-            st.write("Registrar novos membros e visitantes.")
+            st.write("Aceda ao formulário de membros.")
+            
     with c2:
         if st.session_state.perfil in ["Pastores", "Secretária"]:
             with st.container(border=True):
                 st.write("### 📊 Dashboard")
-                st.write("Análise de crescimento e indicadores.")
+                st.write("Visualize métricas e gráficos.")
 
-    st.info("Utilize o menu lateral para navegar entre as funções.")
+    st.info("Utilize o menu lateral à esquerda para navegar.")
