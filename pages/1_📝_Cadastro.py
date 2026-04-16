@@ -1,7 +1,9 @@
 import streamlit as st
 import requests
 from datetime import datetime
-
+if st.button("⬅️ Voltar ao Menu Principal"):
+    st.switch_page("app.py")
+st.divider()
 # 1. Proteção de Acesso
 if "logado" not in st.session_state or not st.session_state.logado:
     st.error("⚠️ Acesso negado. Por favor, faça login na página inicial.")
