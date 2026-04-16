@@ -2,8 +2,24 @@ import streamlit as st
 import requests
 from datetime import datetime
 if st.button("⬅️ Voltar ao Menu Principal"):
+import streamlit as st
+# ... outros imports ...
+
+# CSS para esconder a barra lateral nesta página específica
+st.markdown("""
+    <style>
+    [data-testid="stSidebar"], [data-testid="stSidebarNav"] {
+        display: none;
+    }
+    </style>
+    """, unsafe_allow_html=True)
+
+# Botão de voltar (Essencial já que não tem barra lateral)
+if st.button("⬅️ Voltar ao Menu Principal"):
     st.switch_page("app.py")
+
 st.divider()
+# ... restante do seu código de cadastro ...
 # 1. Proteção de Acesso
 if "logado" not in st.session_state or not st.session_state.logado:
     st.error("⚠️ Acesso negado. Por favor, faça login na página inicial.")
