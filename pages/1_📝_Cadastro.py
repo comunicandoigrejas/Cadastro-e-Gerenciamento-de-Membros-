@@ -90,7 +90,7 @@ with st.form("form_cadastro", clear_on_submit=True):
             }
             
             try:
-                response = requests.post(WEBAPP_URL, json=dados, timeout=10)
+                response = requests.post(WEBAPP_URL, json=dados, timeout=30)
                 if response.text == "Sucesso":
                     st.success(f"✅ Sucesso! {nome} foi registrado.")
                     st.balloons()
