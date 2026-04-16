@@ -1,6 +1,8 @@
 import streamlit as st
 import pandas as pd
-
+if st.button("⬅️ Voltar ao Menu Principal"):
+    st.switch_page("app.py")
+st.divider()
 # 1. Configuração de Layout (Wide para caber os cartões de métricas)
 st.set_page_config(page_title="Dashboard - ISOSED", page_icon="📊", layout="wide")
 
