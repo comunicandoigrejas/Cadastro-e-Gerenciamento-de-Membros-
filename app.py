@@ -88,7 +88,7 @@ if not st.session_state.logado:
 else:
     st.markdown(f"""
         <div class="login-header">
-            <h1>CENTRAL DE COMANDO</h1>
+            <h1>CADASTRO DE MEMBROS</h1>
             <p>Operador: {st.session_state.perfil} | ISOSED Cosmópolis</p>
         </div>
     """, unsafe_allow_html=True)
