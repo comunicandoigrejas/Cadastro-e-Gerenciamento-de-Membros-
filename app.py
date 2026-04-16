@@ -8,19 +8,29 @@ st.set_page_config(
     initial_sidebar_state="collapsed"
 )
 
-# Estilização CSS para o visual profissional Dark/Blue
+# CSS para esconder a barra lateral e estilizar os botões centrais
 st.markdown("""
     <style>
+    /* Esconde a barra lateral e o botão de menu */
+    [data-testid="stSidebar"], [data-testid="stSidebarNav"] {
+        display: none;
+    }
     .main {
         background-color: #0e1117;
     }
     .stButton>button {
         width: 100%;
-        border-radius: 5px;
-        height: 3em;
-        background-color: #2e7bcf;
+        border-radius: 10px;
+        height: 5em;
+        background-color: #1a1a1a;
         color: white;
         font-weight: bold;
+        border: 2px solid #2e7bcf;
+        transition: 0.3s;
+    }
+    .stButton>button:hover {
+        background-color: #2e7bcf;
+        border-color: white;
     }
     .login-header {
         text-align: center;
@@ -31,20 +41,15 @@ st.markdown("""
         color: white;
         border: 1px solid #2e7bcf;
     }
-    h1 {
-        font-family: 'Trebuchet MS', sans-serif;
-        letter-spacing: 2px;
-    }
     </style>
-    """, unsafe_allow_html=True) # CORRIGIDO: O nome correto é unsafe_allow_html
+    """, unsafe_allow_html=True)
 
-# 2. Inicialização do Estado de Sessão
+# 2. Inicialização do Estado
 if "logado" not in st.session_state:
     st.session_state.logado = False
 if "perfil" not in st.session_state:
     st.session_state.perfil = None
 
-# Base de Dados de Usuários
 USUARIOS = {
     "pastor": {"senha": "123", "perfil": "Pastores"},
     "secretaria": {"senha": "456", "perfil": "Secretária"},
@@ -58,7 +63,7 @@ def validar_login(usuario, senha):
         return True
     return False
 
-# --- TELA DE LOGIN ESTILIZADA ---
+# --- TELA DE LOGIN ---
 if not st.session_state.logado:
     st.markdown("""
         <div class="login-header">
@@ -67,43 +72,47 @@ if not st.session_state.logado:
         </div>
     """, unsafe_allow_html=True)
 
-    with st.container():
-        # Centralizando o formulário
-        left_co, cent_co, last_co = st.columns([0.5, 3, 0.5])
-        with cent_co:
-            with st.form("login_form"):
-                usuario = st.text_input("Usuário", placeholder="Identificação")
-                senha = st.text_input("Senha", type="password", placeholder="••••••••")
-                botao = st.form_submit_button("ACESSAR PORTAL")
-                
-                if botao:
-                    if validar_login(usuario, senha):
-                        st.rerun()
-                    else:
-                        st.error("Credenciais incorretas.")
+    left_co, cent_co, last_co = st.columns([0.5, 3, 0.5])
+    with cent_co:
+        with st.form("login_form"):
+            usuario = st.text_input("Usuário", placeholder="Identificação")
+            senha = st.text_input("Senha", type="password", placeholder="••••••••")
+            if st.form_submit_button("ACESSAR PORTAL"):
+                if validar_login(usuario, senha):
+                    st.rerun()
+                else:
+                    st.error("Credenciais incorretas.")
 
-# --- APÓS O LOGIN ---
+# --- TELA INICIAL (MENU DE BOTÕES) ---
 else:
-    st.sidebar.title(f"⛪ ISOSED")
-    st.sidebar.info(f"Conectado: {st.session_state.perfil}")
+    st.markdown(f"""
+        <div class="login-header">
+            <h2>Portal de Comando</h2>
+            <p>Sessão ativa: {st.session_state.perfil}</p>
+        </div>
+    """, unsafe_allow_html=True)
+
+    # Organização dos Botões em Colunas
+    c1, c2 = st.columns(2)
+
+    with c1:
+        # Botão que redireciona para a página de cadastro
+        if st.button("📝 NOVO CADASTRO"):
+            st.switch_page("pages/1_📝_Cadastro.py")
+
+    with c2:
+        # Botão do Dashboard (Visível apenas para Pastores e Secretária)
+        if st.session_state.perfil in ["Pastores", "Secretária"]:
+            if st.button("📊 DASHBOARD ESTRATÉGICO"):
+                st.switch_page("pages/2_📊_Dashboard.py")
+        else:
+            st.button("🔒 DASHBOARD (BLOQUEADO)", disabled=True)
+
+    st.markdown("<br>", unsafe_allow_html=True)
     
-    if st.sidebar.button("Encerrar Sessão"):
+    # Botão de Sair no fundo
+    if st.button("🚪 ENCERRAR SESSÃO"):
         st.session_state.logado = False
         st.rerun()
 
-    st.title(f"Bem-vindo, {st.session_state.perfil}")
-    
-    # Cartões de Atalho
-    c1, c2 = st.columns(2)
-    with c1:
-        with st.container(border=True):
-            st.write("### 📝 Cadastros")
-            st.write("Aceda ao formulário de membros.")
-            
-    with c2:
-        if st.session_state.perfil in ["Pastores", "Secretária"]:
-            with st.container(border=True):
-                st.write("### 📊 Dashboard")
-                st.write("Visualize métricas e gráficos.")
-
-    st.info("Utilize o menu lateral à esquerda para navegar.")
+    st.caption("ISOSED Cosmópolis - Gestão Inteligente")
