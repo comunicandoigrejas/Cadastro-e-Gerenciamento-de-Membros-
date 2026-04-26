@@ -76,17 +76,28 @@ with st.form("form_cadastro", clear_on_submit=True):
 
     st.markdown("##### Datas e Localidade")
     hoje = datetime.now()
+    inicio_limite = datetime(1950, 1, 1) # Define o início em 1950
+    
     c_nasc_loc, c_nasc_data = st.columns(2)
     local_nascimento = c_nasc_loc.text_input("Local de Nascimento (Cidade/UF)")
+    
+    # Data de Nascimento (1950 até hoje)
     data_nascimento = c_nasc_data.date_input(
         "Data de Nascimento", 
         value=datetime(2000, 1, 1),
-        min_value=datetime(1950, 1, 1),
+        min_value=inicio_limite,
         max_value=hoje,
         format="DD/MM/YYYY"
     )
     
-    data_batismo = st.date_input("Batizado dia", value=hoje, format="DD/MM/YYYY")
+    # Data de Batismo CORRIGIDA (Agora inicia em 1950)
+    data_batismo = st.date_input(
+        "Batizado dia", 
+        value=hoje, 
+        min_value=inicio_limite, 
+        max_value=hoje, 
+        format="DD/MM/YYYY"
+    )
     
     st.markdown("---")
     consentimento = st.checkbox("Confirmo que o membro autorizou a coleta destes dados (LGPD).")
