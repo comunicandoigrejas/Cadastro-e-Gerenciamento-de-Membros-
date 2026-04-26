@@ -46,7 +46,7 @@ if st.button("⬅️ VOLTAR AO MENU PRINCIPAL"):
 st.divider()
 
 # URL DO SEU GOOGLE APPS SCRIPT
-WEBAPP_URL = "SUA_URL_DO_APPS_SCRIPT_AQUI"
+WEBAPP_URL = "https://script.google.com/macros/s/AKfycbzyxIGWN4xw5pGL-q1ACftSsHYwDeXTUd_EgO9ChoE8Ofcr8Y_DGWnk7bSorZpHFH2a/exec"
 
 # 3. Formulário de Cadastro
 with st.form("form_cadastro", clear_on_submit=True):
