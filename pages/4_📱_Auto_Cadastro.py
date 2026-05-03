@@ -39,7 +39,7 @@ st.markdown("""
 st.markdown('<div class="header-box"><h2>⛪ BEM-VINDO À ISOSED</h2><p>Preencha seus dados para atualizar seu cadastro em nossa congregação.</p></div>', unsafe_allow_html=True)
 
 # URL DO SEU GOOGLE APPS SCRIPT
-WEBAPP_URL = "SUA_URL_DO_APPS_SCRIPT_AQUI"
+WEBAPP_URL = "https://script.google.com/macros/s/AKfycbzyxIGWN4xw5pGL-q1ACftSsHYwDeXTUd_EgO9ChoE8Ofcr8Y_DGWnk7bSorZpHFH2a/exec"
 
 st.info("💡 Por favor, preencha todos os campos com atenção.")
 
