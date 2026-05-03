@@ -73,7 +73,7 @@ with st.form("form_auto_cadastro", clear_on_submit=True):
     st.markdown("---")
     st.markdown("#### Informações Eclesiásticas")
     data_batismo = st.date_input("Data de Batismo", value=hoje, min_value=inicio_limite, max_value=hoje, format="DD/MM/YYYY")
-    cargo = st.selectbox("Cargo Ministerial atual", ["Membro", "Obreiro(a)", "Diácono/Isa", "Presbítero", "Evangelista", "Pastor(a)", "Ainda não sou membro (Visitante)"])
+    cargo = st.selectbox("Cargo Ministerial atual", ["Membro", "Cooperador(a)", "Obreiro(a)", "Líder", "Diácono/Isa", "Presbítero", "Evangelista", "Pastor(a)", "Ainda não sou membro (Visitante)"])
     dizimista = st.radio("Você é dizimista?", ["Sim", "Não"], horizontal=True)
     
     st.markdown("---")
