@@ -62,7 +62,7 @@ with st.form("form_cadastro", clear_on_submit=True):
     with col2:
         estado_civil = st.selectbox("Estado Civil", ["Solteiro(a)", "Casado(a)", "Divorciado(a)", "Viúvo(a)"])
         conjuge = st.text_input("Nome do Cônjuge (se houver)")
-        cargo = st.selectbox("Cargo Ministerial", ["Membro", "Obreiro(a)", "Diácono/Isa", "Presbítero", "Evangelista", "Pastor(a)"])
+        cargo = st.selectbox("Cargo Ministerial", ["Membro", "Cooperador(a)", "Obreiro(a)", "Líder", "Diácono/Isa", "Presbítero", "Evangelista", "Pastor(a)"])
         dizimista = st.radio("Dizimista?", ["Sim", "Não"], horizontal=True)
 
     st.markdown("##### Endereço")
