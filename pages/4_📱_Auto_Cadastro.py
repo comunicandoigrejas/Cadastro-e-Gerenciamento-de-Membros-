@@ -40,7 +40,7 @@ st.markdown("""
 # Cabeçalho
 st.markdown('<div class="header-box"><h2>⛪ BEM-VINDO À ISOSED</h2><p>Preencha seus dados para atualizar seu cadastro.</p></div>', unsafe_allow_html=True)
 
-WEBAPP_URL = "SUA_URL_DO_APPS_SCRIPT_AQUI"
+WEBAPP_URL = "https://script.google.com/macros/s/AKfycbzyxIGWN4xw5pGL-q1ACftSsHYwDeXTUd_EgO9ChoE8Ofcr8Y_DGWnk7bSorZpHFH2a/exec"
 
 # --- LÓGICA DE BUSCA DE CEP (VIACEP) ---
 # Salva o endereço na memória temporária da tela
