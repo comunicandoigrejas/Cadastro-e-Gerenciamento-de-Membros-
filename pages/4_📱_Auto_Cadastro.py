@@ -99,12 +99,22 @@ with st.form("form_auto_cadastro", clear_on_submit=True):
     
     data_nascimento = st.date_input("Data de Nascimento", value=datetime(2000, 1, 1), min_value=inicio_limite, max_value=hoje, format="DD/MM/YYYY")
     
-    st.markdown("##### Informações Eclesiásticas")
-    data_batismo = st.date_input("Data de Batismo", value=hoje, min_value=inicio_limite, max_value=hoje, format="DD/MM/YYYY")
-    
-    # Cargos atualizados!
-    cargo = st.selectbox("Cargo Ministerial atual", ["Membro", "Cooperador(a)", "Obreiro(a)", "Líder", "Diácono/Isa", "Presbítero", "Evangelista", "Pastor(a)", "Ainda não sou membro (Visitante)"])
-    dizimista = st.radio("Você é dizimista?", ["Sim", "Não"], horizontal=True)
+    # No formulário de Auto-Cadastro:
+st.markdown("##### Informações Eclesiásticas")
+data_batismo = st.date_input("Data de Batismo", value=hoje, min_value=inicio_limite, max_value=hoje, format="DD/MM/YYYY")
+
+# NOVO: Multiselect no Auto-Cadastro
+lista_cargos_auto = ["Membro", "Cooperador(a)", "Obreiro(a)", "Líder", "Missionário(a)", "Diácono/Isa", "Presbítero", "Evangelista", "Pastor(a)", "Ainda não sou membro (Visitante)"]
+cargos_auto = st.multiselect("Cargo(s) Ministerial(is) atual(is)", lista_cargos_auto)
+
+dizimista = st.radio("Você é dizimista?", ["Sim", "Não"], horizontal=True)
+
+# No dicionário de dados do envio:
+dados = {
+    # ... outros campos ...
+    "cargo": ", ".join(cargos_auto) if cargos_auto else "Membro/Visitante",
+    # ... outros campos ...
+}
     
     st.markdown("---")
     st.warning("⚖️ Termo de Privacidade (LGPD)")
