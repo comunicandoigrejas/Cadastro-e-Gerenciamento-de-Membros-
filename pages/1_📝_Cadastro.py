@@ -59,11 +59,24 @@ with st.form("form_cadastro", clear_on_submit=True):
         contato = st.text_input("Contato (WhatsApp/Telefone)")
         profissao = st.text_input("Profissão")
         
-    with col2:
-        estado_civil = st.selectbox("Estado Civil", ["Solteiro(a)", "Casado(a)", "Divorciado(a)", "Viúvo(a)"])
-        conjuge = st.text_input("Nome do Cônjuge (se houver)")
-        cargo = st.selectbox("Cargo Ministerial", ["Membro", "Cooperador(a)", "Obreiro(a)", "Líder", "Diácono/Isa", "Presbítero", "Evangelista", "Pastor(a)"])
-        dizimista = st.radio("Dizimista?", ["Sim", "Não"], horizontal=True)
+    # No formulário de cadastro, dentro da col2:
+with col2:
+    estado_civil = st.selectbox("Estado Civil", ["Solteiro(a)", "Casado(a)", "Divorciado(a)", "Viúvo(a)"])
+    conjuge = st.text_input("Nome do Cônjuge (se houver)")
+    
+    # NOVO: Multiselect com Missionário(a) incluído
+    lista_cargos = ["Membro", "Cooperador(a)", "Obreiro(a)", "Líder", "Missionário(a)", "Diácono/Isa", "Presbítero", "Evangelista", "Pastor(a)"]
+    cargos_selecionados = st.multiselect("Cargos Ministeriais (Selecione um ou mais)", lista_cargos)
+    
+    dizimista = st.radio("Dizimista?", ["Sim", "Não"], horizontal=True)
+
+# Na parte de montagem do dicionário 'dados' (antes de enviar ao Apps Script):
+# Transformamos a lista de cargos em uma única frase separada por vírgula
+dados = {
+    # ... outros campos ...
+    "cargo": ", ".join(cargos_selecionados) if cargos_selecionados else "Membro",
+    # ... outros campos ...
+}
 
     st.markdown("##### Endereço")
     c_rua, c_num = st.columns([3, 1])
