@@ -5,7 +5,7 @@ from datetime import datetime
 # 1. Configuração de Estética e Segurança
 st.set_page_config(page_title="Dashboard - ISOSED", page_icon="📊", layout="wide")
 
-# CSS para criar os botões de ícones e manter o padrão Central de Comando
+# CSS para o padrão "Central de Comando" com ajustes de fonte e cor
 st.markdown("""
 <style>
     [data-testid="stSidebar"], [data-testid="stSidebarNav"] { display: none; }
@@ -56,6 +56,14 @@ st.markdown("""
         text-align: center;
         margin-bottom: 20px;
     }
+    
+    /* Ajuste solicitado: Fonte branca e Maiúsculo */
+    .metric-box small {
+        color: white !important;
+        text-transform: uppercase;
+        font-weight: bold;
+        letter-spacing: 1px;
+    }
 </style>
 """, unsafe_allow_html=True)
 
@@ -63,7 +71,7 @@ if "logado" not in st.session_state or not st.session_state.logado:
     st.error("⚠️ Acesso negado. Faça login no menu principal.")
     st.stop()
 
-st.markdown('<div class="header-box"><h2>📊 DASHBOARD ESTRATÉGICO</h2><p>Selecione um cargo para ver a lista de membros e estatísticas</p></div>', unsafe_allow_html=True)
+st.markdown('<div class="header-box"><h2>📊 DASHBOARD ESTRATÉGICO</h2><p>Consulte estatísticas por cargo e aniversariantes por mês</p></div>', unsafe_allow_html=True)
 
 if st.button("⬅️ VOLTAR AO MENU PRINCIPAL", key="voltar"):
     st.switch_page("app.py")
@@ -92,7 +100,6 @@ if df is not None and not df.empty:
     # 2. SELEÇÃO POR ÍCONES (CARGOS)
     st.subheader("👥 Filtrar por Cargo Ministerial")
     
-    # Dicionário de Ícones para cada Cargo
     icones_cargos = {
         "Membro": "👤",
         "Cooperador(a)": "🤝",
@@ -108,15 +115,12 @@ if df is not None and not df.empty:
     if "cargo_selecionado" not in st.session_state:
         st.session_state.cargo_selecionado = "Todos"
 
-    # Criar grade de botões (3 colunas)
     cargos_lista = list(icones_cargos.keys())
     cols = st.columns(len(cargos_lista) // 3 + 1)
     
-    # Botão para ver "Todos"
-    if st.button("📋 EXIBIR TODOS"):
+    if st.button("📋 EXIBIR TODOS OS CARGOS"):
         st.session_state.cargo_selecionado = "Todos"
 
-    # Botões com ícones
     for i, cargo in enumerate(cargos_lista):
         col_idx = i % len(cols)
         icone = icones_cargos.get(cargo, "🔹")
@@ -125,55 +129,64 @@ if df is not None and not df.empty:
 
     st.divider()
 
-    # 3. FILTRAGEM E EXIBIÇÃO DE RESULTADOS
+    # 3. FILTRO DE ANIVERSARIANTES POR MÊS
+    st.subheader("📅 Filtro de Aniversariantes")
+    meses_dict = {
+        1: "Janeiro", 2: "Fevereiro", 3: "Março", 4: "Abril", 5: "Maio", 6: "Junho",
+        7: "Julho", 8: "Agosto", 9: "Setembro", 10: "Outubro", 11: "Novembro", 12: "Dezembro"
+    }
+    
+    mes_atual_idx = datetime.now().month
+    mes_selecionado_nome = st.selectbox("Escolha o mês para consulta:", list(meses_dict.values()), index=mes_atual_idx - 1)
+    mes_selecionado_num = [k for k, v in meses_dict.items() if v == mes_selecionado_nome][0]
+
+    st.divider()
+
+    # 4. FILTRAGEM DOS DADOS
     df_f = df.copy()
+    
+    # Filtro por Cargo
     if st.session_state.cargo_selecionado != "Todos":
         df_f = df_f[df_f['Cargo'].astype(str).str.contains(st.session_state.cargo_selecionado, na=False)]
 
-    # Painel de Quantidade
+    # 5. EXIBIÇÃO DA MÉTRICA (TOTAL)
     st.markdown(f"""
         <div class="metric-box">
-            <small>Total de membros no filtro: <b>{st.session_state.cargo_selecionado}</b></small>
+            <small>TOTAL DE MEMBROS NO FILTRO: {st.session_state.cargo_selecionado}</small>
             <h1 style='color:#2e7bcf; margin:0;'>{len(df_f)}</h1>
         </div>
     """, unsafe_allow_html=True)
 
-    # Lista de Nomes (Tabela Limpa)
+    # Lista de Membros do Cargo Selecionado
     st.subheader(f"📋 Lista de Nomes - {st.session_state.cargo_selecionado}")
-    
-    colunas_focadas = ["Nome", "Cargo", "Contato", "Bairro"]
-    # Garante que as colunas existem antes de mostrar
-    cols_existentes = [c for c in colunas_focadas if c in df_f.columns]
-    
-    st.dataframe(
-        df_f[cols_existentes], 
-        use_container_width=True, 
-        hide_index=True
-    )
+    cols_para_mostrar = ["Nome", "Cargo", "Contato", "Bairro"]
+    existentes = [c for c in cols_para_mostrar if c in df_f.columns]
+    st.dataframe(df_f[existentes], use_container_width=True, hide_index=True)
 
     st.divider()
 
-    # 4. ANIVERSARIANTES DO MÊS ATUAL (Mantido como solicitado anteriormente)
-    mes_atual = datetime.now().month
-    meses_nome = {1:"Janeiro", 2:"Fevereiro", 3:"Março", 4:"Abril", 5:"Maio", 6:"Junho", 
-                  7:"Julho", 8:"Agosto", 9:"Setembro", 10:"Outubro", 11:"Novembro", 12:"Dezembro"}
-    
-    st.subheader(f"🎂 Aniversariantes de {meses_nome[mes_atual]}")
+    # 6. ANIVERSARIANTES DO MÊS SELECIONADO
+    st.subheader(f"🎂 Aniversariantes de {mes_selecionado_nome}")
     
     if "Data Nascimento" in df_f.columns:
+        # Converte para data para extrair o mês e o dia
         df_f['DT_NASC'] = pd.to_datetime(df_f['Data Nascimento'], format='%d/%m/%Y', errors='coerce')
-        df_niver = df_f[df_f['DT_NASC'].dt.month == mes_atual].copy()
+        df_niver = df_f[df_f['DT_NASC'].dt.month == mes_selecionado_num].copy()
         
         if not df_niver.empty:
             df_niver['Dia'] = df_niver['DT_NASC'].dt.day.astype(int)
             df_niver = df_niver.sort_values(by='Dia')
-            st.success(f"Temos {len(df_niver)} aniversariantes este mês no grupo selecionado!")
+            st.success(f"Encontrados {len(df_niver)} aniversariantes em {mes_selecionado_nome} para este grupo.")
+            
+            # Exibição organizada
             st.table(df_niver[['Dia', 'Nome', 'Contato']])
         else:
-            st.info("Nenhum aniversariante neste grupo para o mês atual.")
+            st.info(f"Nenhum aniversariante encontrado no mês de {mes_selecionado_nome} para o filtro selecionado.")
+    else:
+        st.warning("Coluna 'Data Nascimento' não encontrada na planilha.")
 
 else:
     st.warning("⚠️ Planilha não carregada. Verifique a URL.")
 
-st.caption("ISOSED Cosmópolis - Gestão Ministerial Estratégica")
+st.caption("ISOSED Cosmópolis - Inteligência Eclesiástica")
 st.caption("Desenvolvido por Comunicando Igrejas")
