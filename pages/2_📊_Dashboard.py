@@ -71,7 +71,7 @@ if st.button("⬅️ VOLTAR AO MENU PRINCIPAL", key="voltar"):
 st.divider()
 
 # --- CARREGAMENTO DE DADOS ---
-URL_PLANILHA = "SUA_URL_DA_PLANILHA_AQUI"
+URL_PLANILHA = "https://docs.google.com/spreadsheets/d/1jtaWUZGAlDcCNctxIOyFaTUJ-Bt73L1WiVXxsBHqmas/edit?gid=0#gid=0"
 
 def obter_link_csv(url):
     if "/edit" in url: return url.split("/edit")[0] + "/export?format=csv"
