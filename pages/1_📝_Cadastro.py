@@ -38,6 +38,10 @@ if "logado" not in st.session_state or not st.session_state.logado:
     st.error("⚠️ Acesso negado. Por favor, faça login.")
     st.stop()
 
+# Memória temporária para o endereço buscado via CEP
+if "end_interno" not in st.session_state:
+    st.session_state.end_interno = {"rua": "", "bairro": ""}
+
 st.markdown('<div class="header-box"><h2>📝 NOVO CADASTRO</h2><p>Inserir membro na base de dados institucional</p></div>', unsafe_allow_html=True)
 
 if st.button("⬅️ VOLTAR AO MENU PRINCIPAL"):
@@ -46,7 +50,29 @@ if st.button("⬅️ VOLTAR AO MENU PRINCIPAL"):
 st.divider()
 
 # URL DO SEU GOOGLE APPS SCRIPT
-WEBAPP_URL = "https://script.google.com/macros/s/AKfycbzyxIGWN4xw5pGL-q1ACftSsHYwDeXTUd_EgO9ChoE8Ofcr8Y_DGWnk7bSorZpHFH2a/exec"
+WEBAPP_URL = "SUA_URL_DO_APPS_SCRIPT_AQUI"
+
+# --- BLOCO DE BUSCA DE CEP ---
+st.markdown("##### 📍 Localizar Endereço")
+c_cep_in, c_btn_in = st.columns([2, 1])
+cep_digitado = c_cep_in.text_input("Digite o CEP", max_chars=9, placeholder="00000-000")
+
+if c_btn_in.button("🔍 BUSCAR CEP"):
+    cep_limpo = cep_digitado.replace("-", "").replace(".", "").strip()
+    if len(cep_limpo) == 8:
+        try:
+            r = requests.get(f"https://viacep.com.br/ws/{cep_limpo}/json/", timeout=5)
+            dados_cep = r.json()
+            if "erro" not in dados_cep:
+                st.session_state.end_interno["rua"] = dados_cep.get("logradouro", "")
+                st.session_state.end_interno["bairro"] = dados_cep.get("bairro", "")
+                st.success("✅ Endereço localizado!")
+            else:
+                st.error("❌ CEP não encontrado.")
+        except:
+            st.error("⚠️ Falha na conexão com o serviço de CEP.")
+    else:
+        st.warning("CEP inválido.")
 
 # 3. Formulário de Cadastro
 with st.form("form_cadastro", clear_on_submit=True):
@@ -59,58 +85,34 @@ with st.form("form_cadastro", clear_on_submit=True):
         contato = st.text_input("Contato (WhatsApp/Telefone)")
         profissao = st.text_input("Profissão")
         
-    # No formulário de cadastro, dentro da col2:
-with col2:
-    estado_civil = st.selectbox("Estado Civil", ["Solteiro(a)", "Casado(a)", "Divorciado(a)", "Viúvo(a)"])
-    conjuge = st.text_input("Nome do Cônjuge (se houver)")
-    
-    # NOVO: Multiselect com Missionário(a) incluído
-    lista_cargos = ["Membro", "Cooperador(a)", "Obreiro(a)", "Líder", "Missionário(a)", "Diácono/Isa", "Presbítero", "Evangelista", "Pastor(a)"]
-    cargos_selecionados = st.multiselect("Cargos Ministeriais (Selecione um ou mais)", lista_cargos)
-    
-    dizimista = st.radio("Dizimista?", ["Sim", "Não"], horizontal=True)
+    with col2:
+        estado_civil = st.selectbox("Estado Civil", ["Solteiro(a)", "Casado(a)", "Divorciado(a)", "Viúvo(a)"])
+        conjuge = st.text_input("Nome do Cônjuge (se houver)")
+        
+        lista_cargos = ["Membro", "Cooperador(a)", "Obreiro(a)", "Líder", "Missionário(a)", "Diácono/Isa", "Presbítero", "Evangelista", "Pastor(a)"]
+        cargos_sel = st.multiselect("Cargo(s) Ministerial(is)", lista_cargos)
+        
+        dizimista = st.radio("Dizimista?", ["Sim", "Não"], horizontal=True)
 
-# Na parte de montagem do dicionário 'dados' (antes de enviar ao Apps Script):
-# Transformamos a lista de cargos em uma única frase separada por vírgula
-dados = {
-    # ... outros campos ...
-    "cargo": ", ".join(cargos_selecionados) if cargos_selecionados else "Membro",
-    # ... outros campos ...
-}
-
-    st.markdown("##### Endereço")
+    st.markdown("##### Endereço Confirmado")
     c_rua, c_num = st.columns([3, 1])
-    rua = c_rua.text_input("Rua/Logradouro")
+    # Campos preenchidos automaticamente se o CEP for buscado
+    rua = c_rua.text_input("Rua/Logradouro", value=st.session_state.end_interno["rua"])
     numero = c_num.text_input("Nº")
     
     c_bairro, c_cep = st.columns(2)
-    bairro = c_bairro.text_input("Bairro")
-    cep = c_cep.text_input("CEP")
+    bairro = c_bairro.text_input("Bairro", value=st.session_state.end_interno["bairro"])
+    cep = c_cep.text_input("CEP Confirmado", value=cep_digitado)
 
     st.markdown("##### Datas e Localidade")
     hoje = datetime.now()
-    inicio_limite = datetime(1950, 1, 1) # Define o início em 1950
+    inicio_limite = datetime(1950, 1, 1)
     
     c_nasc_loc, c_nasc_data = st.columns(2)
     local_nascimento = c_nasc_loc.text_input("Local de Nascimento (Cidade/UF)")
+    data_nascimento = c_nasc_data.date_input("Data de Nascimento", value=datetime(2000, 1, 1), min_value=inicio_limite, max_value=hoje, format="DD/MM/YYYY")
     
-    # Data de Nascimento (1950 até hoje)
-    data_nascimento = c_nasc_data.date_input(
-        "Data de Nascimento", 
-        value=datetime(2000, 1, 1),
-        min_value=inicio_limite,
-        max_value=hoje,
-        format="DD/MM/YYYY"
-    )
-    
-    # Data de Batismo CORRIGIDA (Agora inicia em 1950)
-    data_batismo = st.date_input(
-        "Batizado dia", 
-        value=hoje, 
-        min_value=inicio_limite, 
-        max_value=hoje, 
-        format="DD/MM/YYYY"
-    )
+    data_batismo = st.date_input("Batizado dia", value=hoje, min_value=inicio_limite, max_value=hoje, format="DD/MM/YYYY")
     
     st.markdown("---")
     consentimento = st.checkbox("Confirmo que o membro autorizou a coleta destes dados (LGPD).")
@@ -123,6 +125,8 @@ dados = {
         elif "SUA_URL" in WEBAPP_URL:
             st.error("⚠️ Configure a URL do Apps Script.")
         else:
+            cargo_final = ", ".join(cargos_sel) if cargos_sel else "Membro"
+            
             dados = {
                 "data_cadastro": hoje.strftime("%d/%m/%Y %H:%M"),
                 "nome": str(nome).strip(),
@@ -139,7 +143,7 @@ dados = {
                 "cpf": str(cpf),
                 "estado_civil": str(estado_civil),
                 "conjuge": str(conjuge),
-                "cargo": str(cargo),
+                "cargo": cargo_final,
                 "dizimista": str(dizimista),
                 "consentimento_lgpd": "Sim",
                 "cadastrado_por": st.session_state.perfil
@@ -148,8 +152,9 @@ dados = {
             try:
                 response = requests.post(WEBAPP_URL, json=dados, timeout=30)
                 if response.text == "Sucesso":
-                    st.success(f"✅ Sucesso! {nome} foi registrado na base da ISOSED.")
+                    st.success(f"✅ Sucesso! {nome} foi registrado.")
                     st.balloons()
+                    st.session_state.end_interno = {"rua": "", "bairro": ""}
                 else:
                     st.error(f"Erro no servidor: {response.text}")
             except Exception as e:
