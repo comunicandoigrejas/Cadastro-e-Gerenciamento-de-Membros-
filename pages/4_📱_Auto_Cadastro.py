@@ -5,6 +5,7 @@ from datetime import datetime
 # 1. Configuração para Celular
 st.set_page_config(page_title="Auto-Cadastro ISOSED", page_icon="📱", layout="centered")
 
+# CSS focado na visualização mobile (oculta menus e barra superior)
 st.markdown("""
 <style>
     [data-testid="stSidebar"], [data-testid="stSidebarNav"] { display: none; }
@@ -37,16 +38,16 @@ st.markdown("""
 </style>
 """, unsafe_allow_html=True)
 
-# Cabeçalho
-st.markdown('<div class="header-box"><h2>⛪ BEM-VINDO À ISOSED</h2><p>Preencha seus dados para atualizar seu cadastro.</p></div>', unsafe_allow_html=True)
+st.markdown('<div class="header-box"><h2>⛪ BEM-VINDO À ISOSED</h2><p>Preencha seus dados para atualizar seu cadastro na congregação.</p></div>', unsafe_allow_html=True)
 
-WEBAPP_URL = "https://script.google.com/macros/s/AKfycbzyxIGWN4xw5pGL-q1ACftSsHYwDeXTUd_EgO9ChoE8Ofcr8Y_DGWnk7bSorZpHFH2a/exec"
+# URL DO SEU GOOGLE APPS SCRIPT
+WEBAPP_URL = "SUA_URL_DO_APPS_SCRIPT_AQUI"
 
-# --- LÓGICA DE BUSCA DE CEP (VIACEP) ---
-# Salva o endereço na memória temporária da tela
+# Memória temporária para o endereço (Impede que o endereço suma ao digitar outras coisas)
 if "endereco_auto" not in st.session_state:
     st.session_state.endereco_auto = {"rua": "", "bairro": ""}
 
+# --- 1. BUSCA DE CEP (Fora do formulário para não recarregar a página) ---
 st.markdown("#### 📍 1. Localize seu Endereço")
 col_cep, col_btn = st.columns([2, 1])
 cep_digitado = col_cep.text_input("Digite o seu CEP (Apenas números)", max_chars=9)
@@ -55,12 +56,11 @@ if col_btn.button("🔍 BUSCAR"):
     cep_limpo = cep_digitado.replace("-", "").replace(".", "").strip()
     if len(cep_limpo) == 8:
         try:
-            # Conecta com a base dos Correios
             response = requests.get(f"https://viacep.com.br/ws/{cep_limpo}/json/", timeout=5)
-            dados = response.json()
-            if "erro" not in dados:
-                st.session_state.endereco_auto["rua"] = dados.get("logradouro", "")
-                st.session_state.endereco_auto["bairro"] = dados.get("bairro", "")
+            dados_cep = response.json()
+            if "erro" not in dados_cep:
+                st.session_state.endereco_auto["rua"] = dados_cep.get("logradouro", "")
+                st.session_state.endereco_auto["bairro"] = dados_cep.get("bairro", "")
                 st.success("✅ Endereço encontrado!")
             else:
                 st.error("❌ CEP não encontrado.")
@@ -71,7 +71,7 @@ if col_btn.button("🔍 BUSCAR"):
 
 st.markdown("---")
 
-# --- FORMULÁRIO PRINCIPAL ---
+# --- 2. FORMULÁRIO PRINCIPAL ---
 st.markdown("#### 📝 2. Preencha seus Dados")
 with st.form("form_auto_cadastro", clear_on_submit=True):
     nome = st.text_input("Nome Completo")
@@ -81,8 +81,6 @@ with st.form("form_auto_cadastro", clear_on_submit=True):
     
     st.markdown("##### Detalhes do Endereço")
     cep = st.text_input("Confirmar CEP", value=cep_digitado)
-    
-    # Preenchimento automático ativado nos campos abaixo
     rua = st.text_input("Rua/Logradouro", value=st.session_state.endereco_auto["rua"])
     numero = st.text_input("Número")
     bairro = st.text_input("Bairro", value=st.session_state.endereco_auto["bairro"])
@@ -91,7 +89,6 @@ with st.form("form_auto_cadastro", clear_on_submit=True):
     estado_civil = st.selectbox("Estado Civil", ["Solteiro(a)", "Casado(a)", "Divorciado(a)", "Viúvo(a)"])
     conjuge = st.text_input("Nome do Cônjuge (se houver)")
     profissao = st.text_input("Profissão")
-    
     local_nascimento = st.text_input("Cidade/Estado de Nascimento")
     
     hoje = datetime.now()
@@ -99,35 +96,34 @@ with st.form("form_auto_cadastro", clear_on_submit=True):
     
     data_nascimento = st.date_input("Data de Nascimento", value=datetime(2000, 1, 1), min_value=inicio_limite, max_value=hoje, format="DD/MM/YYYY")
     
-    # No formulário de Auto-Cadastro:
-st.markdown("##### Informações Eclesiásticas")
-data_batismo = st.date_input("Data de Batismo", value=hoje, min_value=inicio_limite, max_value=hoje, format="DD/MM/YYYY")
-
-# NOVO: Multiselect no Auto-Cadastro
-lista_cargos_auto = ["Membro", "Cooperador(a)", "Obreiro(a)", "Líder", "Missionário(a)", "Diácono/Isa", "Presbítero", "Evangelista", "Pastor(a)", "Ainda não sou membro (Visitante)"]
-cargos_auto = st.multiselect("Cargo(s) Ministerial(is) atual(is)", lista_cargos_auto)
-
-dizimista = st.radio("Você é dizimista?", ["Sim", "Não"], horizontal=True)
-
-# No dicionário de dados do envio:
-dados = {
-    # ... outros campos ...
-    "cargo": ", ".join(cargos_auto) if cargos_auto else "Membro/Visitante",
-    # ... outros campos ...
-}
+    st.markdown("##### Informações Eclesiásticas")
+    data_batismo = st.date_input("Data de Batismo", value=hoje, min_value=inicio_limite, max_value=hoje, format="DD/MM/YYYY")
+    
+    # Campo de Múltipla Escolha com todos os cargos atualizados
+    lista_cargos_auto = ["Membro", "Cooperador(a)", "Obreiro(a)", "Líder", "Missionário(a)", "Diácono/Isa", "Presbítero", "Evangelista", "Pastor(a)", "Ainda não sou membro (Visitante)"]
+    cargos_auto = st.multiselect("Cargo(s) Ministerial(is) atual(is) (Pode escolher mais de um)", lista_cargos_auto)
+    
+    dizimista = st.radio("Você é dizimista?", ["Sim", "Não"], horizontal=True)
     
     st.markdown("---")
     st.warning("⚖️ Termo de Privacidade (LGPD)")
     consentimento = st.checkbox("Autorizo a ISOSED Cosmópolis a armazenar e utilizar meus dados para fins de comunicação e gestão eclesiástica.")
     
+    # Botão de envio destacado
     st.markdown('<div class="btn-submit">', unsafe_allow_html=True)
     submit = st.form_submit_button("ENVIAR MEU CADASTRO")
     st.markdown('</div>', unsafe_allow_html=True)
 
+    # Processamento do formulário após o clique
     if submit:
         if not nome or not contato or not consentimento:
             st.error("❌ Por favor, preencha o Nome, o Contato e aceite o Termo de Privacidade.")
+        elif "SUA_URL" in WEBAPP_URL:
+            st.error("⚠️ Aviso ao Administrador: Configure a URL do Apps Script no código.")
         else:
+            # Junta os múltiplos cargos escolhidos (Ex: "Presbítero, Líder"). Se vazio, coloca Visitante.
+            cargo_final_auto = ", ".join(cargos_auto) if cargos_auto else "Membro/Visitante"
+            
             dados = {
                 "data_cadastro": hoje.strftime("%d/%m/%Y %H:%M"),
                 "nome": str(nome).strip(),
@@ -144,7 +140,7 @@ dados = {
                 "cpf": str(cpf),
                 "estado_civil": str(estado_civil),
                 "conjuge": str(conjuge),
-                "cargo": str(cargo),
+                "cargo": cargo_final_auto,
                 "dizimista": str(dizimista),
                 "consentimento_lgpd": "Sim",
                 "cadastrado_por": "Auto-Cadastro (QR Code)"
@@ -155,11 +151,12 @@ dados = {
                 if response.text == "Sucesso":
                     st.success("✅ Cadastro enviado com sucesso! Deus abençoe sua vida.")
                     st.balloons()
-                    # Limpa a memória do endereço para o próximo irmão que for usar o mesmo celular
+                    # Limpa o endereço da memória para a próxima pessoa que usar o mesmo celular
                     st.session_state.endereco_auto = {"rua": "", "bairro": ""}
                 else:
-                    st.error("Erro ao enviar. Procure a secretaria.")
+                    st.error(f"Erro no servidor. Procure a secretaria. Log: {response.text}")
             except Exception:
-                st.error("Falha na conexão de internet. Tente novamente.")
+                st.error("Falha na conexão de internet. Verifique seu sinal e tente novamente.")
 
 st.caption("ISOSED Cosmópolis - Lei Geral de Proteção de Dados (13.709/2018)")
+st.caption("Desenvolvido por Comunicando Igrejas")
