@@ -73,6 +73,7 @@ if st.button("⬅️ VOLTAR AO MENU PRINCIPAL"):
 
 st.divider()
 
+# Coloque o link da sua planilha DENTRO das aspas duplas abaixo:
 URL_PLANILHA = "https://docs.google.com/spreadsheets/d/1jtaWUZGAlDcCNctxIOyFaTUJ-Bt73L1WiVXxsBHqmas/edit?gid=0#gid=0"
 
 def obter_link_csv(url):
@@ -94,51 +95,27 @@ df = carregar_dados(obter_link_csv(URL_PLANILHA))
 
 if df is not None and not df.empty:
     
-    # FILTRO POR ÍCONES
-    st.subheader("👥 Filtrar por Cargo Ministerial")
-    icones_cargos = {
-        "Membro": "👤", "Cooperador(a)": "🤝", "Obreiro(a)": "🛠️",
-        "Líder": "⭐", "Missionário(a)": "🌍", "Diácono/Isa": "🍷",
-        "Presbítero": "📜", "Evangelista": "📢", "Pastor(a)": "🛡️",
-        "Visitante": "👋"
-    }
-
-    if "filtro_cargo_consulta" not in st.session_state:
-        st.session_state.filtro_cargo_consulta = "Todos"
-
-    cols_cargos = st.columns(5)
-    
-    if st.button("📋 EXIBIR TODOS"):
-        st.session_state.filtro_cargo_consulta = "Todos"
-
-    cargos_lista = list(icones_cargos.keys())
-    for i, cargo in enumerate(cargos_lista):
-        col_idx = i % 5
-        icone = icones_cargos[cargo]
-        if cols_cargos[col_idx].button(f"{icone}\n{cargo}"):
-            st.session_state.filtro_cargo_consulta = cargo
-
-    st.divider()
-
-    # BUSCA
-    busca = st.text_input(f"Pesquisar nome (Filtro atual: {st.session_state.filtro_cargo_consulta}):", placeholder="Ex: João Silva")
+    # 2. BUSCA DIRETA POR NOME
+    st.subheader("🔍 Localizar Membro")
+    busca = st.text_input("Pesquisar por nome ou sobrenome:", placeholder="Ex: João Silva")
     
     df_f = df.copy()
-    if st.session_state.filtro_cargo_consulta != "Todos":
-        df_f = df_f[df_f['Cargo'].astype(str).str.contains(st.session_state.filtro_cargo_consulta, na=False)]
     
     if busca and "Nome" in df_f.columns:
         df_f = df_f[df_f['Nome'].astype(str).str.contains(busca, case=False, na=False)]
 
+    st.divider()
+
+    # 3. EXIBIÇÃO DOS DADOS
     if not df_f.empty:
         st.success(f"Encontrado(s) {len(df_f)} registro(s):")
         
         for i, row in df_f.iterrows():
-            nome = row.get("Nome", "Sem Nome")
-            cargo = row.get("Cargo", "Membro")
-            cpf = row.get('CPF', '')
-            data_nasc = row.get('Data Nascimento', '')
-            data_batismo = row.get('Data Batismo', '')
+            nome = str(row.get("Nome", "Sem Nome"))
+            cargo = str(row.get("Cargo", "Membro"))
+            cpf = str(row.get('CPF', ''))
+            data_nasc = str(row.get('Data Nascimento', ''))
+            data_batismo = str(row.get('Data Batismo', ''))
             
             with st.expander(f"👤 {nome} - {cargo}"):
                 
@@ -150,8 +127,11 @@ if df is not None and not df.empty:
                 c1.write(f"**🪪 CPF:** {cpf}")
                 
                 c2.write(f"**💍 Estado Civil:** {row.get('Estado Civil', '')}")
-                conjuge = row.get("Cônjuge", "")
-                if conjuge: c2.write(f"**👩‍❤️‍👨 Cônjuge:** {conjuge}")
+                
+                conjuge = str(row.get("Cônjuge", ""))
+                if conjuge:
+                    c2.write(f"**👩‍❤️‍👨 Cônjuge:** {conjuge}")
+                    
                 c2.write(f"**💼 Profissão:** {row.get('Profissão', '')}")
 
                 st.markdown('<div class="section-title">⛪ Informações Eclesiásticas & Contato</div>', unsafe_allow_html=True)
@@ -160,8 +140,10 @@ if df is not None and not df.empty:
                 c3.write(f"**🛡️ Cargo(s):** {cargo}")
                 
                 c4.write(f"**📞 WhatsApp:** {row.get('Contato', '')}")
-                dizimista = row.get("Dizimista", "")
-                c4.write(f"**💰 Dizimista:** {'💎 Sim' if dizimista == 'Sim' else '⚪ Não'}")
+                
+                dizimista = str(row.get("Dizimista", ""))
+                icone_dizimo = "💎 Sim" if dizimista == "Sim" else "⚪ Não"
+                c4.write(f"**💰 Dizimista:** {icone_dizimo}")
 
                 st.markdown('<div class="section-title">📍 Endereço</div>', unsafe_allow_html=True)
                 st.write(f"🏠 {row.get('Rua', '')}, {row.get('Nº', '')} - {row.get('Bairro', '')} | **CEP:** {row.get('CEP', '')}")
@@ -204,7 +186,7 @@ if df is not None and not df.empty:
                         <div class="footer">Documento de uso interno - Validade Indeterminada</div>
                     </div>
                     <script>
-                        window.onload = function() {{ window.print(); }}
+                        window.onload = function() {{ window.print(); }};
                     </script>
                 </body>
                 </html>
@@ -214,25 +196,29 @@ if df is not None and not df.empty:
                 btn_col1, btn_col2 = st.columns(2)
                 
                 with btn_col1:
-                    # Botão para baixar a carteirinha gerada
+                    nome_arquivo = f"Carteirinha_{nome.replace(' ', '_')}.html"
                     st.download_button(
-                        label="🪪 GERAR CARTEIRINHA PARA IMPRESSÃO",
+                        label="🪪 GERAR CARTEIRINHA",
                         data=html_carteirinha,
-                        file_name=f"Carteirinha_{nome.replace(' ', '_')}.html",
+                        file_name=nome_arquivo,
                         mime="text/html",
                         use_container_width=True
                     )
                     
                 with btn_col2:
-                    if "Link Ficha" in df_f.columns and str(row.get('Link Ficha')).startswith("http"):
-                        st.markdown(f'<a href="{row["Link Ficha"]}" target="_blank" class="pdf-button" style="margin-top:0;">📄 ABRIR FICHA LGPD</a>', unsafe_allow_html=True)
+                    link_ficha = str(row.get('Link Ficha', ''))
+                    if "Link Ficha" in df_f.columns and link_ficha.startswith("http"):
+                        st.markdown(f'<a href="{link_ficha}" target="_blank" class="pdf-button" style="margin-top:0;">📄 ABRIR FICHA LGPD</a>', unsafe_allow_html=True)
                     else:
                         st.info("ℹ️ Ficha LGPD não vinculada.")
 
     else:
-        st.warning("Nenhum membro encontrado com os filtros atuais.")
+        if busca:
+            st.warning("Nenhum membro encontrado com este nome.")
+        else:
+            st.info("👆 Digite o nome do membro acima para visualizar a ficha e gerar a carteirinha.")
 else:
-    st.error("⚠️ Erro: Não foi possível carregar a base de dados.")
+    st.error("⚠️ Erro: Não foi possível carregar a base de dados. Verifique a URL da planilha.")
 
 st.markdown("---")
 st.caption("ISOSED Cosmópolis - Sistema em conformidade com a Lei 13.709/2018 (LGPD)")
