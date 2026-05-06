@@ -7,8 +7,10 @@ st.set_page_config(page_title="Consulta - ISOSED", page_icon="🔍", layout="wid
 st.markdown("""
 <style>
     [data-testid="stSidebar"], [data-testid="stSidebarNav"] { display: none; }
+    header[data-testid="stHeader"] { visibility: hidden; height: 0%; }
     .main { background-color: #0e1117; }
     
+    /* Botões Padrão e de Cargo */
     .stButton>button {
         width: 100%;
         border-radius: 8px;
@@ -17,9 +19,8 @@ st.markdown("""
         border: 1px solid #2e7bcf;
         font-weight: bold;
         transition: 0.3s;
-        white-space: pre-wrap;
         height: auto;
-        padding: 10px 5px;
+        padding: 15px 5px;
     }
     .stButton>button:hover {
         background-color: #2e7bcf;
@@ -47,7 +48,18 @@ st.markdown("""
         border-radius: 5px;
         text-decoration: none;
         font-weight: bold;
+        margin-top: 15px;
+    }
+    
+    /* Títulos dentro do Expander */
+    .section-title {
+        color: #2e7bcf;
+        font-size: 16px;
+        font-weight: bold;
         margin-top: 10px;
+        margin-bottom: 10px;
+        border-bottom: 1px solid #1a1a1a;
+        padding-bottom: 5px;
     }
 </style>
 """, unsafe_allow_html=True)
@@ -60,7 +72,7 @@ if st.session_state.perfil not in ["Pastores", "Secretária"]:
     st.warning("🚫 Acesso restrito apenas à liderança e secretaria.")
     st.stop()
 
-st.markdown('<div class="header-box"><h2>🔍 CONSULTA DE MEMBROS</h2><p>Pesquisa detalhada e prova de consentimento LGPD</p></div>', unsafe_allow_html=True)
+st.markdown('<div class="header-box"><h2>🔍 CONSULTA DE MEMBROS</h2><p>Ficha completa, prontuário digital e consentimento LGPD</p></div>', unsafe_allow_html=True)
 
 if st.button("⬅️ VOLTAR AO MENU PRINCIPAL"):
     st.switch_page("app.py")
@@ -78,59 +90,112 @@ def obter_link_csv(url):
 @st.cache_data(ttl=60)
 def carregar_dados(link):
     try:
-        return pd.read_csv(link)
+        df = pd.read_csv(link)
+        df.columns = df.columns.str.strip() # Limpa espaços nos cabeçalhos
+        # Substitui valores "NaN" (vazios) por string vazia para não quebrar o visual
+        df = df.fillna("") 
+        return df
     except:
         return None
 
-csv_url = obter_link_csv(URL_PLANILHA)
-df = carregar_dados(csv_url)
+df = carregar_dados(obter_link_csv(URL_PLANILHA))
 
 if df is not None and not df.empty:
-    # Remove espaços ocultos dos nomes das colunas da planilha para evitar erros
-    df.columns = df.columns.str.strip()
     
-    # 3. LÓGICA DE BUSCA
-    busca = st.text_input("Pesquisar por nome específico:", placeholder="Ex: João Silva")
-    df_exibir = df.copy()
+    # 2. FILTRO POR ÍCONES DE CARGO (Igual ao Dashboard)
+    st.subheader("👥 Filtrar por Cargo Ministerial")
     
-    # Filtro por nome usando o novo cabeçalho exato: "Nome"
-    if busca and "Nome" in df_exibir.columns:
-        df_exibir = df_exibir[df_exibir['Nome'].astype(str).str.contains(busca, case=False, na=False)]
+    icones_cargos = {
+        "Membro": "👤", "Cooperador(a)": "🤝", "Obreiro(a)": "🛠️",
+        "Líder": "⭐", "Missionário(a)": "🌍", "Diácono/Isa": "🍷",
+        "Presbítero": "📜", "Evangelista": "📢", "Pastor(a)": "🛡️",
+        "Visitante": "👋"
+    }
 
-    if not df_exibir.empty:
-        st.success(f"Exibindo {len(df_exibir)} registro(s):")
+    if "filtro_cargo_consulta" not in st.session_state:
+        st.session_state.filtro_cargo_consulta = "Todos"
+
+    cols_cargos = st.columns(5)
+    
+    if st.button("📋 EXIBIR TODOS"):
+        st.session_state.filtro_cargo_consulta = "Todos"
+
+    cargos_lista = list(icones_cargos.keys())
+    for i, cargo in enumerate(cargos_lista):
+        col_idx = i % 5
+        icone = icones_cargos[cargo]
+        if cols_cargos[col_idx].button(f"{icone}\n{cargo}"):
+            st.session_state.filtro_cargo_consulta = cargo
+
+    st.divider()
+
+    # 3. BUSCA POR NOME
+    busca = st.text_input(f"Pesquisar nome (Filtro atual: {st.session_state.filtro_cargo_consulta}):", placeholder="Ex: João Silva")
+    
+    # Aplicando os Filtros
+    df_f = df.copy()
+    if st.session_state.filtro_cargo_consulta != "Todos":
+        df_f = df_f[df_f['Cargo'].astype(str).str.contains(st.session_state.filtro_cargo_consulta, na=False)]
+    
+    if busca and "Nome" in df_f.columns:
+        df_f = df_f[df_f['Nome'].astype(str).str.contains(busca, case=False, na=False)]
+
+    # 4. EXIBIÇÃO DOS RESULTADOS COMPLETOS
+    if not df_f.empty:
+        st.success(f"Encontrado(s) {len(df_f)} registro(s):")
         
-        for i, row in df_exibir.iterrows():
-            # Acessando com segurança usando os NOVOS nomes exatos das colunas da planilha
-            nome_exibir = row.get("Nome", "Sem Nome")
-            cargo_exibir = row.get("Cargo", "N/A")
-            contato_exibir = row.get("Contato", "N/A")
-            nasc_exibir = row.get("Data Nascimento", "N/A")
-            cadastro_exibir = row.get("Data Cadastro", "N/A")
-            bairro_exibir = row.get("Bairro", "N/A")
-            profissao_exibir = row.get("Profissão", "N/A")
+        for i, row in df_f.iterrows():
+            nome = row.get("Nome", "Sem Nome")
+            cargo = row.get("Cargo", "Membro")
             
-            with st.expander(f"👤 {nome_exibir} - {cargo_exibir}"):
+            # Card Expansível
+            with st.expander(f"👤 {nome} - {cargo}"):
+                
+                # --- DADOS PESSOAIS ---
+                st.markdown('<div class="section-title">📋 Dados Pessoais</div>', unsafe_allow_html=True)
                 c1, c2 = st.columns(2)
-                with c1:
-                    st.write(f"**📞 Contato:** {contato_exibir}")
-                    st.write(f"**🎂 Nascimento:** {nasc_exibir}")
-                    st.write(f"**🏠 Bairro:** {bairro_exibir}")
-                with c2:
-                    st.write(f"**💼 Profissão:** {profissao_exibir}")
-                    st.write(f"**🕒 Cadastrado em:** {cadastro_exibir}")
+                c1.write(f"**🚻 Sexo:** {row.get('Sexo', '')}")
+                c1.write(f"**🎂 Nascimento:** {row.get('Data Nascimento', '')} ({row.get('Local Nascimento', '')})")
+                c1.write(f"**🪪 CPF:** {row.get('CPF', '')}")
                 
-                st.divider()
+                c2.write(f"**💍 Estado Civil:** {row.get('Estado Civil', '')}")
+                conjuge = row.get("Cônjuge", "")
+                if conjuge:
+                    c2.write(f"**👩‍❤️‍👨 Cônjuge:** {conjuge}")
+                c2.write(f"**💼 Profissão:** {row.get('Profissão', '')}")
+
+                # --- DADOS ECLESIÁSTICOS ---
+                st.markdown('<div class="section-title">⛪ Informações Eclesiásticas & Contato</div>', unsafe_allow_html=True)
+                c3, c4 = st.columns(2)
+                c3.write(f"**🕊️ Batismo:** {row.get('Data Batismo', '')}")
+                c3.write(f"**🛡️ Cargo(s):** {cargo}")
                 
-                # BUSCA DA FICHA DIGITALIZADA
-                if "Link Ficha" in df_exibir.columns and pd.notnull(row.get('Link Ficha')):
+                c4.write(f"**📞 WhatsApp:** {row.get('Contato', '')}")
+                dizimista = row.get("Dizimista", "")
+                icone_dizimo = "💎 Sim" if dizimista == "Sim" else "⚪ Não"
+                c4.write(f"**💰 Dizimista:** {icone_dizimo}")
+
+                # --- ENDEREÇO ---
+                st.markdown('<div class="section-title">📍 Endereço</div>', unsafe_allow_html=True)
+                rua = row.get("Rua", "")
+                num = row.get("Nº", "")
+                bairro = row.get("Bairro", "")
+                cep = row.get("CEP", "")
+                st.write(f"🏠 {rua}, {num} - {bairro} | **CEP:** {cep}")
+
+                # --- SISTEMA E LGPD ---
+                st.markdown('<div class="section-title">🔒 Segurança do Sistema</div>', unsafe_allow_html=True)
+                st.caption(f"🕒 Cadastrado em: {row.get('Data Cadastro', '')} | ✍️ Por: {row.get('Cadastrado Por', '')}")
+                st.caption(f"⚖️ Consentimento LGPD: {row.get('Consentimento LGPD', '')}")
+                
+                # BUSCA DA FICHA DIGITALIZADA (Botão PDF)
+                if "Link Ficha" in df_f.columns and str(row.get('Link Ficha')).startswith("http"):
                     st.markdown(f'<a href="{row["Link Ficha"]}" target="_blank" class="pdf-button">📄 ABRIR FICHA ASSINADA (PDF)</a>', unsafe_allow_html=True)
-                else:
-                    st.info("ℹ️ Crie uma coluna 'Link Ficha' na planilha e cole o link do PDF para ver o botão aqui.")
+
     else:
-        st.warning("Nenhum membro encontrado.")
+        st.warning("Nenhum membro encontrado com os filtros atuais.")
 else:
-    st.error("⚠️ Erro: Não foi possível carregar a base de dados. Verifique a URL.")
+    st.error("⚠️ Erro: Não foi possível carregar a base de dados. Verifique a URL da planilha.")
 
 st.markdown("---")
 st.caption("ISOSED Cosmópolis - Sistema em conformidade com a Lei 13.709/2018 (LGPD)")
