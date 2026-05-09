@@ -50,7 +50,7 @@ if st.button("⬅️ VOLTAR AO MENU PRINCIPAL"):
 st.divider()
 
 # URL DO SEU GOOGLE APPS SCRIPT
-WEBAPP_URL = "https://script.google.com/macros/s/AKfycbwvknAjmDPMY2SImnPlbWkS4FdNyBlbybPG7rJ479OkMqJjvtIPDUucFbLyxQjyaj4l/exec"
+WEBAPP_URL = "https://script.google.com/macros/s/AKfycbwtZaUfrHcLccqB6McFUjRSdagInLkzDKdrUAtWkNCE-38ejpj1Dnjbxa7FsmXxsKI5/exec"
 
 # --- BLOCO DE BUSCA DE CEP ---
 st.markdown("##### 📍 Localizar Endereço")
