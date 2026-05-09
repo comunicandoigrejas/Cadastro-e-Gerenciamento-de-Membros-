@@ -66,14 +66,14 @@ if "logado" not in st.session_state or not st.session_state.logado:
     st.error("⚠️ Acesso negado. Por favor, faça login.")
     st.stop()
 
-st.markdown('<div class="header-box"><h2>🔍 CONSULTA DE MEMBROS</h2><p>Ficha completa, prontuário digital e emissão de credenciais</p></div>', unsafe_allow_html=True)
+st.markdown('<div class="header-box"><h2>🔍 CONSULTA DE MEMBROS</h2><p>Ficha completa, prontuário digital e emissão de formulários</p></div>', unsafe_allow_html=True)
 
 if st.button("⬅️ VOLTAR AO MENU PRINCIPAL"):
     st.switch_page("app.py")
 
 st.divider()
 
-# Coloque o link da sua planilha DENTRO das aspas duplas abaixo:
+# Coloque sua URL entre as aspas:
 URL_PLANILHA = "https://docs.google.com/spreadsheets/d/1jtaWUZGAlDcCNctxIOyFaTUJ-Bt73L1WiVXxsBHqmas/edit?gid=0#gid=0"
 
 def obter_link_csv(url):
@@ -95,7 +95,6 @@ df = carregar_dados(obter_link_csv(URL_PLANILHA))
 
 if df is not None and not df.empty:
     
-    # 2. BUSCA DIRETA POR NOME
     st.subheader("🔍 Localizar Membro")
     busca = st.text_input("Pesquisar por nome ou sobrenome:", placeholder="Ex: João Silva")
     
@@ -106,32 +105,33 @@ if df is not None and not df.empty:
 
     st.divider()
 
-    # 3. EXIBIÇÃO DOS DADOS
     if not df_f.empty:
         st.success(f"Encontrado(s) {len(df_f)} registro(s):")
         
         for i, row in df_f.iterrows():
+            # Coletando os dados do membro
+            num_cadastro = str(row.get("Nº Cadastro", "-"))
             nome = str(row.get("Nome", "Sem Nome"))
             cargo = str(row.get("Cargo", "Membro"))
             cpf = str(row.get('CPF', ''))
             data_nasc = str(row.get('Data Nascimento', ''))
             data_batismo = str(row.get('Data Batismo', ''))
+            conjuge = str(row.get("Cônjuge", ""))
+            dizimista = str(row.get("Dizimista", ""))
             
-            with st.expander(f"👤 {nome} - {cargo}"):
+            with st.expander(f"👤 [{num_cadastro}] {nome} - {cargo}"):
                 
-                # --- DADOS DA FICHA ---
+                # --- DADOS DA FICHA NA TELA ---
                 st.markdown('<div class="section-title">📋 Dados Pessoais</div>', unsafe_allow_html=True)
                 c1, c2 = st.columns(2)
+                c1.write(f"**🔢 Nº Cadastro:** {num_cadastro}")
                 c1.write(f"**🚻 Sexo:** {row.get('Sexo', '')}")
                 c1.write(f"**🎂 Nascimento:** {data_nasc} ({row.get('Local Nascimento', '')})")
                 c1.write(f"**🪪 CPF:** {cpf}")
                 
                 c2.write(f"**💍 Estado Civil:** {row.get('Estado Civil', '')}")
-                
-                conjuge = str(row.get("Cônjuge", ""))
                 if conjuge:
                     c2.write(f"**👩‍❤️‍👨 Cônjuge:** {conjuge}")
-                    
                 c2.write(f"**💼 Profissão:** {row.get('Profissão', '')}")
 
                 st.markdown('<div class="section-title">⛪ Informações Eclesiásticas & Contato</div>', unsafe_allow_html=True)
@@ -140,8 +140,6 @@ if df is not None and not df.empty:
                 c3.write(f"**🛡️ Cargo(s):** {cargo}")
                 
                 c4.write(f"**📞 WhatsApp:** {row.get('Contato', '')}")
-                
-                dizimista = str(row.get("Dizimista", ""))
                 icone_dizimo = "💎 Sim" if dizimista == "Sim" else "⚪ Não"
                 c4.write(f"**💰 Dizimista:** {icone_dizimo}")
 
@@ -149,41 +147,101 @@ if df is not None and not df.empty:
                 st.write(f"🏠 {row.get('Rua', '')}, {row.get('Nº', '')} - {row.get('Bairro', '')} | **CEP:** {row.get('CEP', '')}")
 
                 st.markdown('<div class="section-title">🔒 Sistema & Documentos</div>', unsafe_allow_html=True)
+                st.write(f"**📅 Data de Inserção no Sistema:** {row.get('Data Cadastro', '')}")
                 
-                # --- GERADOR DE CARTEIRINHA EM HTML ---
-                html_carteirinha = f"""
+                # --- GERADOR DE FICHA COMPLETA A4 (HTML PARA IMPRESSÃO) ---
+                html_ficha_completa = f"""
                 <!DOCTYPE html>
                 <html>
                 <head>
                 <meta charset="UTF-8">
-                <title>Carteirinha - {nome}</title>
+                <title>Ficha de Cadastro - {nome}</title>
                 <style>
-                    body {{ font-family: Arial, sans-serif; display: flex; justify-content: center; align-items: center; height: 100vh; background-color: #f0f0f0; margin: 0; }}
-                    .card {{ width: 8.6cm; height: 5.4cm; background: white; border-radius: 8px; border: 2px solid #003366; padding: 10px; box-sizing: border-box; position: relative; box-shadow: 0 4px 8px rgba(0,0,0,0.1); }}
-                    .header {{ background: #003366; color: white; text-align: center; padding: 5px; border-radius: 4px 4px 0 0; font-weight: bold; font-size: 14px; margin: -10px -10px 10px -10px; }}
-                    .title {{ text-align: center; font-size: 10px; font-weight: bold; color: #666; margin-bottom: 10px; text-transform: uppercase; letter-spacing: 1px; }}
-                    .info {{ font-size: 11px; margin-bottom: 4px; color: #333; }}
-                    .info strong {{ color: #003366; }}
-                    .footer {{ position: absolute; bottom: 8px; left: 10px; right: 10px; text-align: center; font-size: 8px; color: #999; border-top: 1px solid #ccc; padding-top: 5px; }}
-                    .photo-placeholder {{ position: absolute; top: 40px; right: 10px; width: 2cm; height: 2.5cm; border: 1px dashed #ccc; text-align: center; line-height: 2.5cm; font-size: 10px; color: #999; background: #f9f9f9; }}
+                    body {{ font-family: Arial, sans-serif; background-color: #f0f0f0; margin: 0; padding: 20px; display: flex; justify-content: center; }}
+                    .page {{ width: 210mm; min-height: 297mm; background: white; padding: 20mm; box-sizing: border-box; box-shadow: 0 0 10px rgba(0,0,0,0.1); position: relative; }}
+                    .header {{ text-align: center; margin-bottom: 30px; border-bottom: 2px solid #003366; padding-bottom: 10px; }}
+                    .header h1 {{ margin: 0; color: #003366; font-size: 24px; text-transform: uppercase; }}
+                    .header h2 {{ margin: 5px 0 0 0; color: #666; font-size: 16px; }}
+                    .photo-box {{ position: absolute; top: 20mm; right: 20mm; width: 30mm; height: 40mm; border: 1px dashed #333; display: flex; justify-content: center; align-items: center; color: #999; font-size: 12px; font-weight: bold; }}
+                    .section-title {{ font-size: 14px; color: #003366; font-weight: bold; margin-top: 25px; border-bottom: 1px solid #ccc; padding-bottom: 3px; margin-bottom: 15px; text-transform: uppercase; }}
+                    .row {{ display: flex; margin-bottom: 12px; flex-wrap: wrap; width: 80%; }}
+                    .row-full {{ width: 100%; }}
+                    .field {{ font-size: 12px; margin-right: 20px; margin-bottom: 5px; }}
+                    .field strong {{ color: #333; }}
+                    .field-value {{ border-bottom: 1px solid #000; padding: 0 5px; min-width: 50px; display: inline-block; color: #000; font-weight: bold; }}
+                    .signature-area {{ margin-top: 60px; text-align: center; }}
+                    .signature-line {{ width: 60%; border-top: 1px solid #000; margin: 0 auto 5px auto; }}
                     @media print {{
-                        body {{ background: white; align-items: flex-start; justify-content: flex-start; }}
-                        .card {{ box-shadow: none; border: 1px solid #000; }}
-                        @page {{ margin: 0; size: auto; }}
+                        body {{ background: white; padding: 0; display: block; }}
+                        .page {{ box-shadow: none; width: 100%; min-height: auto; padding: 0; }}
+                        @page {{ margin: 15mm; size: A4; }}
                     }}
                 </style>
                 </head>
                 <body>
-                    <div class="card">
-                        <div class="header">ISOSED COSMÓPOLIS</div>
-                        <div class="title">Credencial de Membro</div>
-                        <div class="photo-placeholder">FOTO 3x4</div>
-                        <div class="info"><strong>Nome:</strong> {nome}</div>
-                        <div class="info"><strong>Cargo:</strong> {cargo}</div>
-                        <div class="info"><strong>CPF:</strong> {cpf}</div>
-                        <div class="info"><strong>Nasc:</strong> {data_nasc}</div>
-                        <div class="info"><strong>Batismo:</strong> {data_batismo}</div>
-                        <div class="footer">Documento de uso interno - Validade Indeterminada</div>
+                    <div class="page">
+                        <div class="header">
+                            <h1>ISOSED COSMÓPOLIS</h1>
+                            <h2>Ficha Completa de Cadastro de Membro</h2>
+                        </div>
+                        
+                        <div class="photo-box">FOTO 3x4</div>
+                        
+                        <div class="row row-full">
+                            <div class="field"><strong>Nº de Cadastro:</strong> <span class="field-value">{num_cadastro}</span></div>
+                            <div class="field"><strong>Data do Registro:</strong> <span class="field-value">{row.get('Data Cadastro', '')}</span></div>
+                        </div>
+
+                        <div class="section-title">Dados Pessoais</div>
+                        <div class="row row-full">
+                            <div class="field" style="flex: 1;"><strong>Nome Completo:</strong> <span class="field-value" style="width: 90%;">{nome}</span></div>
+                        </div>
+                        <div class="row row-full">
+                            <div class="field"><strong>Sexo:</strong> <span class="field-value">{row.get('Sexo', '')}</span></div>
+                            <div class="field"><strong>Data de Nascimento:</strong> <span class="field-value">{data_nasc}</span></div>
+                            <div class="field"><strong>Local Nasc:</strong> <span class="field-value">{row.get('Local Nascimento', '')}</span></div>
+                        </div>
+                        <div class="row row-full">
+                            <div class="field"><strong>CPF:</strong> <span class="field-value">{cpf}</span></div>
+                            <div class="field"><strong>Profissão:</strong> <span class="field-value">{row.get('Profissão', '')}</span></div>
+                            <div class="field"><strong>Estado Civil:</strong> <span class="field-value">{row.get('Estado Civil', '')}</span></div>
+                        </div>
+                        <div class="row row-full">
+                            <div class="field" style="flex: 1;"><strong>Nome do Cônjuge:</strong> <span class="field-value" style="width: 80%;">{conjuge if conjuge else "______________________________________________________"}</span></div>
+                        </div>
+
+                        <div class="section-title">Endereço e Contato</div>
+                        <div class="row row-full">
+                            <div class="field" style="flex: 1;"><strong>Logradouro:</strong> <span class="field-value" style="width: 80%;">{row.get('Rua', '')}</span></div>
+                            <div class="field"><strong>Nº:</strong> <span class="field-value">{row.get('Nº', '')}</span></div>
+                        </div>
+                        <div class="row row-full">
+                            <div class="field"><strong>Bairro:</strong> <span class="field-value">{row.get('Bairro', '')}</span></div>
+                            <div class="field"><strong>CEP:</strong> <span class="field-value">{row.get('CEP', '')}</span></div>
+                            <div class="field"><strong>WhatsApp/Contato:</strong> <span class="field-value">{row.get('Contato', '')}</span></div>
+                        </div>
+
+                        <div class="section-title">Informações Eclesiásticas</div>
+                        <div class="row row-full">
+                            <div class="field"><strong>Data de Batismo:</strong> <span class="field-value">{data_batismo}</span></div>
+                            <div class="field"><strong>Cargo(s) Ministerial(is):</strong> <span class="field-value">{cargo}</span></div>
+                            <div class="field"><strong>Dizimista:</strong> <span class="field-value">{dizimista}</span></div>
+                        </div>
+                        
+                        <div class="section-title">Termo de Consentimento e Privacidade (LGPD)</div>
+                        <div style="font-size: 11px; text-align: justify; color: #333; line-height: 1.5; margin-bottom: 10px;">
+                            Autorizo a ISOSED Cosmópolis a coletar, armazenar e utilizar meus dados pessoais aqui fornecidos para fins exclusivos de gestão eclesiástica, comunicação pastoral e organização interna, em conformidade com a Lei Geral de Proteção de Dados (Lei nº 13.709/2018).
+                        </div>
+                        <div class="row row-full">
+                            <div class="field"><strong>Aceite Digital no Sistema:</strong> <span class="field-value">{row.get('Consentimento LGPD', '')}</span></div>
+                            <div class="field"><strong>Responsável pelo Cadastro:</strong> <span class="field-value">{row.get('Cadastrado Por', '')}</span></div>
+                        </div>
+
+                        <div class="signature-area">
+                            <div class="signature-line"></div>
+                            <div class="field"><strong>Assinatura do Membro / Responsável</strong></div>
+                            <div style="font-size: 10px; color: #666; margin-top: 5px;">Declaro que as informações preenchidas são verdadeiras.</div>
+                        </div>
                     </div>
                     <script>
                         window.onload = function() {{ window.print(); }};
@@ -192,14 +250,14 @@ if df is not None and not df.empty:
                 </html>
                 """
                 
-                # Layout dos botões finais
+                # Botões finais
                 btn_col1, btn_col2 = st.columns(2)
                 
                 with btn_col1:
-                    nome_arquivo = f"Carteirinha_{nome.replace(' ', '_')}.html"
+                    nome_arquivo = f"Ficha_Cadastro_{nome.replace(' ', '_')}.html"
                     st.download_button(
-                        label="🪪 GERAR CARTEIRINHA",
-                        data=html_carteirinha,
+                        label="🖨️ GERAR FICHA COMPLETA (A4)",
+                        data=html_ficha_completa,
                         file_name=nome_arquivo,
                         mime="text/html",
                         use_container_width=True
@@ -208,18 +266,17 @@ if df is not None and not df.empty:
                 with btn_col2:
                     link_ficha = str(row.get('Link Ficha', ''))
                     if "Link Ficha" in df_f.columns and link_ficha.startswith("http"):
-                        st.markdown(f'<a href="{link_ficha}" target="_blank" class="pdf-button" style="margin-top:0;">📄 ABRIR FICHA LGPD</a>', unsafe_allow_html=True)
+                        st.markdown(f'<a href="{link_ficha}" target="_blank" class="pdf-button" style="margin-top:0;">📄 ABRIR ARQUIVO ASSINADO</a>', unsafe_allow_html=True)
                     else:
-                        st.info("ℹ️ Ficha LGPD não vinculada.")
+                        st.info("ℹ️ Ficha digitalizada não vinculada.")
 
     else:
         if busca:
             st.warning("Nenhum membro encontrado com este nome.")
         else:
-            st.info("👆 Digite o nome do membro acima para visualizar a ficha e gerar a carteirinha.")
+            st.info("👆 Digite o nome do membro acima para visualizar a ficha completa.")
 else:
-    st.error("⚠️ Erro: Não foi possível carregar a base de dados. Verifique a URL da planilha.")
+    st.error("⚠️ Erro: Não foi possível carregar a base de dados.")
 
 st.markdown("---")
-st.caption("ISOSED Cosmópolis - Sistema em conformidade com a Lei 13.709/2018 (LGPD)")
-st.caption("Desenvolvido por Comunicando Igrejas")
+st.caption("ISOSED Cosmópolis - Sistema de Gestão Institucional")
