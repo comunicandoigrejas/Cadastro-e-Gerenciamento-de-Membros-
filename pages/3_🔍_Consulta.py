@@ -280,3 +280,4 @@ else:
 
 st.markdown("---")
 st.caption("ISOSED Cosmópolis - Sistema de Gestão Institucional")
+st.caption("Desenvolvido por Comunicando Igrejas")
