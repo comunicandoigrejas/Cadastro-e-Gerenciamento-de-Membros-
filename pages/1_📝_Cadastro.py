@@ -161,3 +161,4 @@ with st.form("form_cadastro", clear_on_submit=True):
                 st.error(f"Falha na conexão: {e}")
 
 st.caption("ISOSED Cosmópolis - Gestão de Dados Segura")
+st.caption("Desenvolvido por Comunicando Igrejas")
