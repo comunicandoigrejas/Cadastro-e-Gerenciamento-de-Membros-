@@ -109,7 +109,6 @@ if df is not None and not df.empty:
         st.success(f"Encontrado(s) {len(df_f)} registro(s):")
         
         for i, row in df_f.iterrows():
-            # Coletando os dados do membro
             num_cadastro = str(row.get("Nº Cadastro", "-"))
             nome = str(row.get("Nome", "Sem Nome"))
             cargo = str(row.get("Cargo", "Membro"))
@@ -119,9 +118,11 @@ if df is not None and not df.empty:
             conjuge = str(row.get("Cônjuge", ""))
             dizimista = str(row.get("Dizimista", ""))
             
+            # --- PEGA O LINK DA FOTO ---
+            foto_url = str(row.get("Link Foto", "")).strip()
+            
             with st.expander(f"👤 [{num_cadastro}] {nome} - {cargo}"):
                 
-                # --- DADOS DA FICHA NA TELA ---
                 st.markdown('<div class="section-title">📋 Dados Pessoais</div>', unsafe_allow_html=True)
                 c1, c2 = st.columns(2)
                 c1.write(f"**🔢 Nº Cadastro:** {num_cadastro}")
@@ -149,6 +150,14 @@ if df is not None and not df.empty:
                 st.markdown('<div class="section-title">🔒 Sistema & Documentos</div>', unsafe_allow_html=True)
                 st.write(f"**📅 Data de Inserção no Sistema:** {row.get('Data Cadastro', '')}")
                 
+                # --- PREPARA A CAIXA DA FOTO PARA O HTML ---
+                if foto_url.startswith("http"):
+                    # Se tem link, exibe a imagem cobrindo o quadrado perfeitamente
+                    html_foto_box = f'<img src="{foto_url}" alt="Foto de {nome}" style="width: 100%; height: 100%; object-fit: cover;">'
+                else:
+                    # Se não tem link, deixa o texto "FOTO 3x4"
+                    html_foto_box = 'FOTO 3x4'
+
                 # --- GERADOR DE FICHA COMPLETA A4 (HTML PARA IMPRESSÃO) ---
                 html_ficha_completa = f"""
                 <!DOCTYPE html>
@@ -162,7 +171,7 @@ if df is not None and not df.empty:
                     .header {{ text-align: center; margin-bottom: 30px; border-bottom: 2px solid #003366; padding-bottom: 10px; }}
                     .header h1 {{ margin: 0; color: #003366; font-size: 24px; text-transform: uppercase; }}
                     .header h2 {{ margin: 5px 0 0 0; color: #666; font-size: 16px; }}
-                    .photo-box {{ position: absolute; top: 20mm; right: 20mm; width: 30mm; height: 40mm; border: 1px dashed #333; display: flex; justify-content: center; align-items: center; color: #999; font-size: 12px; font-weight: bold; }}
+                    .photo-box {{ position: absolute; top: 20mm; right: 20mm; width: 30mm; height: 40mm; border: 1px dashed #333; display: flex; justify-content: center; align-items: center; color: #999; font-size: 12px; font-weight: bold; overflow: hidden; background: #fafafa; }}
                     .section-title {{ font-size: 14px; color: #003366; font-weight: bold; margin-top: 25px; border-bottom: 1px solid #ccc; padding-bottom: 3px; margin-bottom: 15px; text-transform: uppercase; }}
                     .row {{ display: flex; margin-bottom: 12px; flex-wrap: wrap; width: 80%; }}
                     .row-full {{ width: 100%; }}
@@ -185,7 +194,10 @@ if df is not None and not df.empty:
                             <h2>Ficha Completa de Cadastro de Membro</h2>
                         </div>
                         
-                        <div class="photo-box">FOTO 3x4</div>
+                        <!-- CAIXA DA FOTO DINÂMICA -->
+                        <div class="photo-box">
+                            {html_foto_box}
+                        </div>
                         
                         <div class="row row-full">
                             <div class="field"><strong>Nº de Cadastro:</strong> <span class="field-value">{num_cadastro}</span></div>
