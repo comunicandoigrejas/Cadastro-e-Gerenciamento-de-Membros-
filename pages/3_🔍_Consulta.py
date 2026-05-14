@@ -1,5 +1,6 @@
 import streamlit as st
 import pandas as pd
+import re  # Nova biblioteca para ler e converter os links
 
 # 1. Configuração de Estética e Segurança
 st.set_page_config(page_title="Consulta - ISOSED", page_icon="🔍", layout="wide")
@@ -74,11 +75,27 @@ if st.button("⬅️ VOLTAR AO MENU PRINCIPAL"):
 st.divider()
 
 # Coloque sua URL entre as aspas:
-URL_PLANILHA = "https://docs.google.com/spreadsheets/d/1jtaWUZGAlDcCNctxIOyFaTUJ-Bt73L1WiVXxsBHqmas/edit?gid=0#gid=0"
+URL_PLANILHA = "SUA_URL_DA_PLANILHA_AQUI"
 
 def obter_link_csv(url):
     if "/edit" in url:
         return url.split("/edit")[0] + "/export?format=csv"
+    return url
+
+# Função MÁGICA para converter o link do Google Drive
+def converter_link_drive(url):
+    url = str(url).strip()
+    if "drive.google.com" in url:
+        # Procura o ID no formato /file/d/ID/
+        match = re.search(r'/d/([a-zA-Z0-9_-]+)', url)
+        if match:
+            file_id = match.group(1)
+            return f"https://drive.google.com/uc?export=view&id={file_id}"
+        # Procura o ID no formato ?id=ID
+        match2 = re.search(r'id=([a-zA-Z0-9_-]+)', url)
+        if match2:
+            file_id = match2.group(1)
+            return f"https://drive.google.com/uc?export=view&id={file_id}"
     return url
 
 @st.cache_data(ttl=60)
@@ -118,8 +135,9 @@ if df is not None and not df.empty:
             conjuge = str(row.get("Cônjuge", ""))
             dizimista = str(row.get("Dizimista", ""))
             
-            # --- PEGA O LINK DA FOTO ---
-            foto_url = str(row.get("Link Foto", "")).strip()
+            # --- PEGA E CONVERTE O LINK DA FOTO ---
+            foto_original = str(row.get("Link Foto", "")).strip()
+            foto_url = converter_link_drive(foto_original)
             
             with st.expander(f"👤 [{num_cadastro}] {nome} - {cargo}"):
                 
@@ -152,10 +170,8 @@ if df is not None and not df.empty:
                 
                 # --- PREPARA A CAIXA DA FOTO PARA O HTML ---
                 if foto_url.startswith("http"):
-                    # Se tem link, exibe a imagem cobrindo o quadrado perfeitamente
                     html_foto_box = f'<img src="{foto_url}" alt="Foto de {nome}" style="width: 100%; height: 100%; object-fit: cover;">'
                 else:
-                    # Se não tem link, deixa o texto "FOTO 3x4"
                     html_foto_box = 'FOTO 3x4'
 
                 # --- GERADOR DE FICHA COMPLETA A4 (HTML PARA IMPRESSÃO) ---
