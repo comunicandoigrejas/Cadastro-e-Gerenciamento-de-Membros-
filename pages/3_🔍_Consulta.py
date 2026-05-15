@@ -89,7 +89,20 @@ def converter_link_drive(url):
         # Procura o ID no formato /file/d/ID/
         match = re.search(r'/d/([a-zA-Z0-9_-]+)', url)
         if match:
+            file_id = match.group(1# Função MÁGICA para converter o link do Google Drive (Versão Anti-Bloqueio)
+def converter_link_drive(url):
+    url = str(url).strip()
+    if "drive.google.com" in url:
+        # Procura o ID da imagem dentro do link
+        match = re.search(r'/d/([a-zA-Z0-9_-]+)', url)
+        if not match:
+            match = re.search(r'id=([a-zA-Z0-9_-]+)', url)
+            
+        if match:
             file_id = match.group(1)
+            # Usa o formato 'thumbnail' do Google, que permite abrir a foto na carteirinha sem ser bloqueado!
+            return f"https://drive.google.com/thumbnail?id={file_id}&sz=w800"
+    return url)
             return f"https://drive.google.com/uc?export=view&id={file_id}"
         # Procura o ID no formato ?id=ID
         match2 = re.search(r'id=([a-zA-Z0-9_-]+)', url)
