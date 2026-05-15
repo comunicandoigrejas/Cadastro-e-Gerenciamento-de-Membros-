@@ -1,6 +1,6 @@
 import streamlit as st
 import pandas as pd
-import re  # Nova biblioteca para ler e converter os links
+import re
 
 # 1. Configuração de Estética e Segurança
 st.set_page_config(page_title="Consulta - ISOSED", page_icon="🔍", layout="wide")
@@ -75,40 +75,25 @@ if st.button("⬅️ VOLTAR AO MENU PRINCIPAL"):
 st.divider()
 
 # Coloque sua URL entre as aspas:
-URL_PLANILHA = "https://docs.google.com/spreadsheets/d/1jtaWUZGAlDcCNctxIOyFaTUJ-Bt73L1WiVXxsBHqmas/edit?gid=0#gid=0"
+URL_PLANILHA = "SUA_URL_DA_PLANILHA_AQUI"
 
 def obter_link_csv(url):
     if "/edit" in url:
         return url.split("/edit")[0] + "/export?format=csv"
     return url
 
-# Função MÁGICA para converter o link do Google Drive
+# Função MÁGICA para converter o link do Google Drive (Anti-Bloqueio)
 def converter_link_drive(url):
     url = str(url).strip()
     if "drive.google.com" in url:
-        # Procura o ID no formato /file/d/ID/
-        match = re.search(r'/d/([a-zA-Z0-9_-]+)', url)
-        if match:
-            file_id = match.group(1# Função MÁGICA para converter o link do Google Drive (Versão Anti-Bloqueio)
-def converter_link_drive(url):
-    url = str(url).strip()
-    if "drive.google.com" in url:
-        # Procura o ID da imagem dentro do link
         match = re.search(r'/d/([a-zA-Z0-9_-]+)', url)
         if not match:
             match = re.search(r'id=([a-zA-Z0-9_-]+)', url)
             
         if match:
             file_id = match.group(1)
-            # Usa o formato 'thumbnail' do Google, que permite abrir a foto na carteirinha sem ser bloqueado!
+            # Usa o formato 'thumbnail' que o Google não bloqueia em impressões HTML
             return f"https://drive.google.com/thumbnail?id={file_id}&sz=w800"
-    return url)
-            return f"https://drive.google.com/uc?export=view&id={file_id}"
-        # Procura o ID no formato ?id=ID
-        match2 = re.search(r'id=([a-zA-Z0-9_-]+)', url)
-        if match2:
-            file_id = match2.group(1)
-            return f"https://drive.google.com/uc?export=view&id={file_id}"
     return url
 
 @st.cache_data(ttl=60)
@@ -223,7 +208,6 @@ if df is not None and not df.empty:
                             <h2>Ficha Completa de Cadastro de Membro</h2>
                         </div>
                         
-                        <!-- CAIXA DA FOTO DINÂMICA -->
                         <div class="photo-box">
                             {html_foto_box}
                         </div>
