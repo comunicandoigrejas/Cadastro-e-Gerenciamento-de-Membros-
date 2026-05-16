@@ -40,14 +40,14 @@ st.markdown("""
 
 st.markdown('<div class="header-box"><h2>⛪ BEM-VINDO À ISOSED</h2><p>Preencha seus dados para atualizar seu cadastro na congregação.</p></div>', unsafe_allow_html=True)
 
-# URL DO SEU GOOGLE APPS SCRIPT
+# URL DO SEU GOOGLE APPS SCRIPT (Certifique-se de que é a última gerada como 'Nova Versão')
 WEBAPP_URL = "https://script.google.com/macros/s/AKfycbx6WIrsZbmyGertzhcmNiwotRKWlfHsSi__FnKnr94rpgvQJOFM0HhDjr-TeezUXr1W/exec"
 
 # Memória temporária para o endereço (Impede que o endereço suma ao digitar outras coisas)
 if "endereco_auto" not in st.session_state:
     st.session_state.endereco_auto = {"rua": "", "bairro": ""}
 
-# --- 1. BUSCA DE CEP (Fora do formulário para não recarregar a página) ---
+# --- 1. BUSCA DE CEP ---
 st.markdown("#### 📍 1. Localize seu Endereço")
 col_cep, col_btn = st.columns([2, 1])
 cep_digitado = col_cep.text_input("Digite o seu CEP (Apenas números)", max_chars=9)
@@ -99,7 +99,6 @@ with st.form("form_auto_cadastro", clear_on_submit=True):
     st.markdown("##### Informações Eclesiásticas")
     data_batismo = st.date_input("Data de Batismo", value=hoje, min_value=inicio_limite, max_value=hoje, format="DD/MM/YYYY")
     
-    # Campo de Múltipla Escolha com todos os cargos atualizados
     lista_cargos_auto = ["Membro", "Cooperador(a)", "Obreiro(a)", "Líder", "Missionário(a)", "Diácono/Isa", "Presbítero", "Evangelista", "Pastor(a)", "Ainda não sou membro (Visitante)"]
     cargos_auto = st.multiselect("Cargo(s) Ministerial(is) atual(is) (Pode escolher mais de um)", lista_cargos_auto)
     
@@ -109,19 +108,14 @@ with st.form("form_auto_cadastro", clear_on_submit=True):
     st.warning("⚖️ Termo de Privacidade (LGPD)")
     consentimento = st.checkbox("Autorizo a ISOSED Cosmópolis a armazenar e utilizar meus dados para fins de comunicação e gestão eclesiástica.")
     
-    # Botão de envio destacado
     st.markdown('<div class="btn-submit">', unsafe_allow_html=True)
     submit = st.form_submit_button("ENVIAR MEU CADASTRO")
     st.markdown('</div>', unsafe_allow_html=True)
 
-    # Processamento do formulário após o clique
     if submit:
         if not nome or not contato or not consentimento:
             st.error("❌ Por favor, preencha o Nome, o Contato e aceite o Termo de Privacidade.")
-        elif "SUA_URL" in WEBAPP_URL:
-            st.error("⚠️ Aviso ao Administrador: Configure a URL do Apps Script no código.")
         else:
-            # Junta os múltiplos cargos escolhidos (Ex: "Presbítero, Líder"). Se vazio, coloca Visitante.
             cargo_final_auto = ", ".join(cargos_auto) if cargos_auto else "Membro/Visitante"
             
             dados = {
@@ -147,16 +141,17 @@ with st.form("form_auto_cadastro", clear_on_submit=True):
             }
             
             try:
-                response = requests.post(WEBAPP_URL, json=dados, timeout=30)
-                if response.text == "Sucesso":
+                # Mudança técnica: Forçamos o cabeçalho correto e permitimos redirecionamentos estáveis do Google
+                response = requests.post(WEBAPP_URL, json=dados, headers={"Content-Type": "application/json"}, timeout=30)
+                
+                if "Sucesso" in response.text:
                     st.success("✅ Cadastro enviado com sucesso! Deus abençoe sua vida.")
                     st.balloons()
-                    # Limpa o endereço da memória para a próxima pessoa que usar o mesmo celular
                     st.session_state.endereco_auto = {"rua": "", "bairro": ""}
                 else:
-                    st.error(f"Erro no servidor. Procure a secretaria. Log: {response.text}")
-            except Exception:
-                st.error("Falha na conexão de internet. Verifique seu sinal e tente novamente.")
+                    st.error(f"⚠️ O servidor respondeu com um aviso. Resposta: {response.text}")
+            except Exception as e:
+                st.error(f"Falha na conexão de internet. Detalhes: {e}")
 
 st.caption("ISOSED Cosmópolis - Lei Geral de Proteção de Dados (13.709/2018)")
 st.caption("Desenvolvido por Comunicando Igrejas")
