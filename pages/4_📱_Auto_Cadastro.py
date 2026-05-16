@@ -41,7 +41,7 @@ st.markdown("""
 st.markdown('<div class="header-box"><h2>⛪ BEM-VINDO À ISOSED</h2><p>Preencha seus dados para atualizar seu cadastro na congregação.</p></div>', unsafe_allow_html=True)
 
 # URL DO SEU GOOGLE APPS SCRIPT
-WEBAPP_URL = "https://script.google.com/macros/s/AKfycbzyr_mw8gUeIK5UkB0CDlRv4HW2jAkiCjh5UiSFhAlyRk8yGP3TvQupIWtffsCDyxVx/exec"
+WEBAPP_URL = "https://script.google.com/macros/s/AKfycbxPiEW6zPozizNc5iojfzJE6SbJcWFzNbPFWLFHkHQ7WQOBpibQSf49dtz0sJIarjs/exec"
 
 # Memória temporária para o endereço (Impede que o endereço suma ao digitar outras coisas)
 if "endereco_auto" not in st.session_state:
