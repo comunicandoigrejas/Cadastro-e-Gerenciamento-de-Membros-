@@ -49,7 +49,7 @@ if st.button("⬅️ VOLTAR AO MENU PRINCIPAL"):
 
 st.divider()
 
-# URL DO SEU GOOGLE APPS SCRIPT
+# URL DO SEU GOOGLE APPS SCRIPT (Certifique-se de que é a última gerada como 'Nova Versão')
 WEBAPP_URL = "https://script.google.com/macros/s/AKfycbx6WIrsZbmyGertzhcmNiwotRKWlfHsSi__FnKnr94rpgvQJOFM0HhDjr-TeezUXr1W/exec"
 
 # --- BLOCO DE BUSCA DE CEP ---
@@ -96,7 +96,6 @@ with st.form("form_cadastro", clear_on_submit=True):
 
     st.markdown("##### Endereço Confirmado")
     c_rua, c_num = st.columns([3, 1])
-    # Campos preenchidos automaticamente se o CEP for buscado
     rua = c_rua.text_input("Rua/Logradouro", value=st.session_state.end_interno["rua"])
     numero = c_num.text_input("Nº")
     
@@ -122,8 +121,6 @@ with st.form("form_cadastro", clear_on_submit=True):
     if submit:
         if not nome or not consentimento:
             st.error("❌ O Nome e o Consentimento são obrigatórios.")
-        elif "SUA_URL" in WEBAPP_URL:
-            st.error("⚠️ Configure a URL do Apps Script.")
         else:
             cargo_final = ", ".join(cargos_sel) if cargos_sel else "Membro"
             
@@ -150,13 +147,15 @@ with st.form("form_cadastro", clear_on_submit=True):
             }
             
             try:
-                response = requests.post(WEBAPP_URL, json=dados, timeout=30)
-                if response.text == "Sucesso":
+                # Mudança técnica: Validamos o conteúdo da resposta de forma mais aberta ("in response.text")
+                response = requests.post(WEBAPP_URL, json=dados, headers={"Content-Type": "application/json"}, timeout=30)
+                
+                if "Sucesso" in response.text:
                     st.success(f"✅ Sucesso! {nome} foi registrado.")
                     st.balloons()
                     st.session_state.end_interno = {"rua": "", "bairro": ""}
                 else:
-                    st.error(f"Erro no servidor: {response.text}")
+                    st.error(f"⚠️ O Google recusou o salvamento. Resposta: {response.text}")
             except Exception as e:
                 st.error(f"Falha na conexão: {e}")
 
